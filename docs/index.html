@@ -158,16 +158,21 @@
     /* info banner */
     .info-banner { background: var(--teal-bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: var(--teal-text); display: flex; align-items: flex-start; gap: 8px; }
 
-    /* timetable */
-    .timetable-list { display: flex; flex-direction: column; gap: 12px; }
-    .day-section { margin-bottom: 1.5rem; }
-    .day-header { font-size: 14px; font-weight: 600; color: var(--text-secondary); border-bottom: 0.5px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .tt-grid { display: flex; flex-direction: column; gap: 8px; }
-    .tt-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .tt-time { font-size: 13px; font-weight: 600; color: var(--blue-text); background: var(--blue-bg); padding: 3px 8px; border-radius: var(--radius-md); white-space: nowrap; }
-    .tt-info { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .tt-title { font-size: 14px; font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-    .tt-room { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+    /* timetable grid */
+    .timetable-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 10px; background: var(--surface); margin-bottom: 1.5rem; }
+    .timetable-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; min-width: 700px; }
+    .tt-col { display: flex; flex-direction: column; gap: 8px; background: var(--surface2); border-radius: var(--radius-md); padding: 8px; min-height: 250px; }
+    .tt-col-header { font-size: 13px; font-weight: 600; text-align: center; padding: 6px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-md); margin-bottom: 4px; background: var(--surface); border-radius: var(--radius-md); }
+    .tt-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 8px; display: flex; flex-direction: column; gap: 4px; position: relative; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: transform 0.15s; }
+    .tt-card:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .tt-card-header { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+    .tt-time { font-size: 11px; font-weight: 600; color: var(--blue-text); background: var(--blue-bg); padding: 1px 5px; border-radius: var(--radius-md); width: fit-content; }
+    .tt-title { font-size: 13px; font-weight: 500; word-break: break-all; margin-top: 2px; }
+    .tt-room { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 2px; margin-top: auto; }
+    .tt-card .btn-del-tt { background: none; border: none; cursor: pointer; color: var(--text-tertiary); font-size: 14px; transition: color 0.15s; display: flex; align-items: center; justify-content: center; opacity: 0.4; }
+    .tt-card:hover .btn-del-tt { opacity: 1; }
+    .tt-card .btn-del-tt:hover { color: var(--red-dot); }
+    .tt-empty-day { font-size: 11px; color: var(--text-tertiary); text-align: center; margin: auto 0; padding: 20px 0; }
   </style>
 </head>
 <body>
@@ -308,7 +313,8 @@
         <button class="btn-primary" onclick="addTimetable()"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
       </div>
     </div>
-    <div class="timetable-list" id="timetableList"></div>
+    <!-- 時間割表の描画エリア -->
+    <div id="timetableList"></div>
   </div>
 
 </main>
@@ -618,31 +624,37 @@ function renderTimetable() {
     return;
   }
 
-  const sortedDays = ['1', '2', '3', '4', '5', '6', '0'];
-  let html = '';
+  // 曜日順（月=1, 火=2, 水=3, 木=4, 金=5, 土=6, 日=0）
+  const dayKeys = ['1', '2', '3', '4', '5', '6', '0'];
+  
+  let html = `<div class="timetable-wrapper">
+    <div class="timetable-grid">`;
 
-  sortedDays.forEach(dayKey => {
+  dayKeys.forEach(dayKey => {
     const items = timetable.filter(t => t.day === dayKey).sort((a,b) => a.time.localeCompare(b.time));
-    if (items.length > 0) {
-      html += `<div class="day-section">
-        <div class="day-header"><i class="ti ti-calendar" aria-hidden="true"></i>${dayLabels[dayKey]}</div>
-        <div class="tt-grid">`;
+    
+    html += `<div class="tt-col">
+      <div class="tt-col-header">${dayLabels[dayKey].replace('曜日', '')}</div>`;
       
+    if (items.length === 0) {
+      html += `<div class="tt-empty-day">-</div>`;
+    } else {
       items.forEach(item => {
         html += `<div class="tt-card">
-          <span class="tt-time">${esc(item.time)}</span>
-          <div class="tt-info">
-            <span class="tt-title">${esc(item.title)}</span>
-            <span class="tt-room"><i class="ti ti-map-pin" style="font-size:12px;" aria-hidden="true"></i>${esc(item.room)}</span>
+          <div class="tt-card-header">
+            <span class="tt-time">${esc(item.time)}</span>
+            <button class="btn-del-tt" onclick="deleteTimetable('${item.id}')" aria-label="削除"><i class="ti ti-x"></i></button>
           </div>
-          <button class="btn-del" onclick="deleteTimetable('${item.id}')" aria-label="削除"><i class="ti ti-x"></i></button>
+          <span class="tt-title" title="${esc(item.title)}">${esc(item.title)}</span>
+          <span class="tt-room"><i class="ti ti-map-pin" style="font-size:10px;" aria-hidden="true"></i>${esc(item.room)}</span>
         </div>`;
       });
-      
-      html += `</div></div>`;
     }
+    
+    html += `</div>`;
   });
 
+  html += `</div></div>`;
   el.innerHTML = html;
 }
 
