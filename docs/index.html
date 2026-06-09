@@ -28,7 +28,7 @@
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1a18; --surface: #23231f; --surface2: #2c2c2a;
-        --border: rgba(255,255,255,0.1); --border-md: rgba(255,255,255,0.2);
+        --border: rgba(255, 255, 255, 0.1); --border-md: rgba(255, 255, 255, 0.2);
         --text-primary: #f1efe8; --text-secondary: #b4b2a9; --text-tertiary: #888780;
         --blue-bg: #042c53; --blue-text: #b5d4f4;
         --green-bg: #173404; --green-text: #c0dd97;
@@ -159,21 +159,15 @@
     .info-banner { background: var(--teal-bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: var(--teal-text); display: flex; align-items: flex-start; gap: 8px; }
 
     /* timetable */
-    .tt-grid { display: grid; grid-template-columns: 60px repeat(5,1fr); gap: 1px; background: var(--border); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
-    .tt-grid .tt-header { background: var(--surface2); font-size: 12px; font-weight: 600; text-align: center; padding: 10px 4px; color: var(--text-secondary); }
-    .tt-grid .tt-time { background: var(--surface2); font-size: 11px; text-align: center; padding: 8px 4px; color: var(--text-tertiary); display: flex; align-items: center; justify-content: center; }
-    .tt-grid .tt-cell { background: var(--surface); padding: 6px; min-height: 60px; font-size: 12px; display: flex; flex-direction: column; gap: 2px; position: relative; }
-    .tt-cell .tt-subject { font-weight: 600; font-size: 12px; color: var(--text-primary); line-height: 1.3; }
-    .tt-cell .tt-room { font-size: 10px; color: var(--text-tertiary); }
-    .tt-cell .tt-cell-del { position: absolute; top: 2px; right: 2px; background: none; border: none; cursor: pointer; color: var(--text-tertiary); font-size: 12px; padding: 2px; border-radius: 4px; opacity: 0; transition: opacity 0.15s; }
-    .tt-cell:hover .tt-cell-del { opacity: 1; }
-    .tt-cell .tt-cell-del:hover { color: var(--red-dot); }
-    .tt-cell.today-col { background: var(--blue-bg); }
-    @media(max-width:600px){ .tt-grid { grid-template-columns: 44px repeat(5,1fr); } .tt-grid .tt-header, .tt-grid .tt-time { font-size: 10px; padding: 6px 2px; } .tt-cell .tt-subject { font-size: 11px; } }
-
-    /* attendance reminder banner */
-    .att-banner { background: var(--amber-bg); border: 0.5px solid var(--amber-dot); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: var(--amber-text); display: flex; align-items: center; gap: 8px; font-weight: 500; }
-    .att-banner i { font-size: 16px; flex-shrink: 0; }
+    .timetable-list { display: flex; flex-direction: column; gap: 12px; }
+    .day-section { margin-bottom: 1.5rem; }
+    .day-header { font-size: 14px; font-weight: 600; color: var(--text-secondary); border-bottom: 0.5px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .tt-grid { display: flex; flex-direction: column; gap: 8px; }
+    .tt-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .tt-time { font-size: 13px; font-weight: 600; color: var(--blue-text); background: var(--blue-bg); padding: 3px 8px; border-radius: var(--radius-md); white-space: nowrap; }
+    .tt-info { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .tt-title { font-size: 14px; font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .tt-room { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
   </style>
 </head>
 <body>
@@ -214,7 +208,7 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('transit',this)"><i class="ti ti-train" aria-hidden="true"></i>交通機関</button>
     <button class="tab" onclick="switchTab('deadline',this)"><i class="ti ti-calendar-due" aria-hidden="true"></i>締め切り管理</button>
-    <button class="tab" onclick="switchTab('timetable',this)"><i class="ti ti-table" aria-hidden="true"></i>時間割</button>
+    <button class="tab" onclick="switchTab('timetable',this)"><i class="ti ti-clock" aria-hidden="true"></i>時間割</button>
   </div>
 
   <!-- Transit -->
@@ -293,44 +287,28 @@
   <div class="section" id="tab-timetable">
     <div class="info-banner">
       <i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px" aria-hidden="true"></i>
-      授業を登録すると、開始15分後に出席登録のリマインダーが表示されます。ページを開いている間のみ動作します。
+      今学期の時間割を登録します。授業開始の15分後に「出席登録終わった？」とポップアップでリマインドします。
     </div>
-
-    <div id="attBannerArea"></div>
-
-    <!-- 時間割登録フォーム -->
     <div class="dl-form">
-      <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-        <i class="ti ti-plus" style="color: var(--purple-text); font-size:14px;"></i> 授業を追加
-      </div>
-      <div class="form-row">
-        <input type="text" id="ttSubject" placeholder="科目名（例：Web3・AI概論）" onkeydown="if(event.key==='Enter')addTimetable()" />
-        <input type="text" id="ttRoom" placeholder="教室（例：3号館201）" style="flex:0 0 140px" />
-      </div>
       <div class="form-row">
         <select id="ttDay">
-          <option value="1">月曜</option>
-          <option value="2">火曜</option>
-          <option value="3">水曜</option>
-          <option value="4">木曜</option>
-          <option value="5">金曜</option>
+          <option value="1">月曜日</option>
+          <option value="2">火曜日</option>
+          <option value="3">水曜日</option>
+          <option value="4">木曜日</option>
+          <option value="5">金曜日</option>
+          <option value="6">土曜日</option>
+          <option value="0">日曜日</option>
         </select>
-        <select id="ttPeriod">
-          <option value="1">1限 (09:00)</option>
-          <option value="2">2限 (10:40)</option>
-          <option value="3">3限 (13:00)</option>
-          <option value="4">4限 (14:40)</option>
-          <option value="5">5限 (16:20)</option>
-        </select>
+        <input type="text" id="ttTitle" placeholder="科目名（例：Web3概論）" onkeydown="if(event.key==='Enter')addTimetable()" />
+      </div>
+      <div class="form-row">
+        <input type="text" id="ttRoom" placeholder="教室名（例：301教室）" style="flex: 1;" onkeydown="if(event.key==='Enter')addTimetable()" />
+        <input type="time" id="ttTime" />
         <button class="btn-primary" onclick="addTimetable()"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
       </div>
     </div>
-
-    <!-- 時間割表 -->
-    <div class="tt-grid" id="timetableGrid"></div>
-
-    <!-- 登録済みリスト -->
-    <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 0.5rem;" id="ttCount"></div>
+    <div class="timetable-list" id="timetableList"></div>
   </div>
 
 </main>
@@ -341,12 +319,13 @@ let lines = JSON.parse(localStorage.getItem('td_lines') || '[]');
 let deadlines = JSON.parse(localStorage.getItem('td_deadlines') || '[]');
 let timetable = JSON.parse(localStorage.getItem('td_timetable') || '[]');
 let dlFilter = 'all';
-let alertedClasses = {}; // 同じ授業で二重アラートを防止
+let alertedToday = {}; // { 'id_YYYY-MM-DD': true }
 
 const typeLabel = { train:'電車', subway:'地下鉄', bus:'バス' };
 const typeClass = { train:'badge-train', subway:'badge-subway', bus:'badge-bus' };
 const typeIcon  = { train:'ti-train', subway:'ti-train', bus:'ti-bus' };
 const dlTypeLabel = { report:'レポート', exam:'試験', assignment:'課題', other:'その他' };
+const dayLabels = { '1': '月曜日', '2': '火曜日', '3': '水曜日', '4': '木曜日', '5': '金曜日', '6': '土曜日', '0': '日曜日' };
 
 /* ── Search URL builder ── */
 function searchURL(name, type, dest) {
@@ -367,7 +346,7 @@ function searchURL(name, type, dest) {
   const map = {
     '山手線':JRE, '中央線':JRE, '京浜東北線':JRE, '総武線':JRE,
     '東海道線':JRE, '横須賀線':JRE, '埼京線':JRE, '常磐線':JRE,
-    '南武線':JRE, '横浜線':JRE, '武蔵野線':JRE, '宇都宮線':JRE,
+    '南武線':JRE, '横浜線':JRE, '武蔵野線':JRE, '宇通宮線':JRE,
     '高崎線':JRE, '湘南新宿ライン':JRE, '上野東京ライン':JRE,
     'JR東日本':JRE,
     '東京メトロ':METRO, '銀座線':METRO, '丸ノ内線':METRO,
@@ -412,6 +391,7 @@ function searchURL(name, type, dest) {
 /* ── Persist ── */
 function saveLines() { localStorage.setItem('td_lines', JSON.stringify(lines)); }
 function saveDeadlines() { localStorage.setItem('td_deadlines', JSON.stringify(deadlines)); }
+function saveTimetable() { localStorage.setItem('td_timetable', JSON.stringify(timetable)); }
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -422,9 +402,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDeadlines();
   renderTimetable();
   updateSummary();
-  // 出席登録忘れないくん：1分ごとにチェック
-  checkAttendance();
-  setInterval(checkAttendance, 60000);
+  
+  // 出席アラートタイマー監視の開始
+  startAttendanceMonitor();
 });
 
 /* ── Tabs ── */
@@ -630,6 +610,123 @@ function filterDL(f, btn) {
   renderDeadlines();
 }
 
+/* ── Timetable ── */
+function renderTimetable() {
+  const el = document.getElementById('timetableList');
+  if (!timetable.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-calendar-time"></i>時間割がまだ登録されていません<small>上のフォームから追加してください</small></div>`;
+    return;
+  }
+
+  const sortedDays = ['1', '2', '3', '4', '5', '6', '0'];
+  let html = '';
+
+  sortedDays.forEach(dayKey => {
+    const items = timetable.filter(t => t.day === dayKey).sort((a,b) => a.time.localeCompare(b.time));
+    if (items.length > 0) {
+      html += `<div class="day-section">
+        <div class="day-header"><i class="ti ti-calendar" aria-hidden="true"></i>${dayLabels[dayKey]}</div>
+        <div class="tt-grid">`;
+      
+      items.forEach(item => {
+        html += `<div class="tt-card">
+          <span class="tt-time">${esc(item.time)}</span>
+          <div class="tt-info">
+            <span class="tt-title">${esc(item.title)}</span>
+            <span class="tt-room"><i class="ti ti-map-pin" style="font-size:12px;" aria-hidden="true"></i>${esc(item.room)}</span>
+          </div>
+          <button class="btn-del" onclick="deleteTimetable('${item.id}')" aria-label="削除"><i class="ti ti-x"></i></button>
+        </div>`;
+      });
+      
+      html += `</div></div>`;
+    }
+  });
+
+  el.innerHTML = html;
+}
+
+function addTimetable() {
+  const day = document.getElementById('ttDay').value;
+  const title = document.getElementById('ttTitle').value.trim();
+  const room = document.getElementById('ttRoom').value.trim() || '教室未設定';
+  const time = document.getElementById('ttTime').value;
+
+  if (!title || !time) {
+    alert('科目名と開始時間を入力してください');
+    return;
+  }
+
+  timetable.push({
+    id: Date.now().toString(),
+    day,
+    title,
+    room,
+    time
+  });
+
+  document.getElementById('ttTitle').value = '';
+  document.getElementById('ttRoom').value = '';
+  document.getElementById('ttTime').value = '';
+
+  saveTimetable();
+  renderTimetable();
+}
+
+function deleteTimetable(id) {
+  timetable = timetable.filter(t => t.id !== id);
+  saveTimetable();
+  renderTimetable();
+}
+
+/* ── Attendance Monitor ("出席登録忘れないくん") ── */
+function startAttendanceMonitor() {
+  // 60秒(1分)ごとに時刻チェックを実行
+  setInterval(checkAttendanceReminders, 60000);
+  
+  // 読み込み時にも一度即時チェック
+  checkAttendanceReminders();
+}
+
+function checkAttendanceReminders() {
+  const now = new Date();
+  const currentDay = now.getDay().toString(); // "0"(日) 〜 "6"(土)
+  const currentH = now.getHours();
+  const currentM = now.getMinutes();
+  const currentTimeStr = `${String(currentH).padStart(2, '0')}:${String(currentM).padStart(2, '0')}`;
+  
+  // 今日の日付文字列 (重複アラート制御用)
+  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+
+  timetable.forEach(item => {
+    // 曜日が一致するかチェック
+    if (item.day !== currentDay) return;
+
+    // 授業の開始時間から15分後の時刻を算出
+    const [h, m] = item.time.split(':').map(Number);
+    let targetM = m + 15;
+    let targetH = h;
+    
+    if (targetM >= 60) {
+      targetM -= 60;
+      targetH = (targetH + 1) % 24;
+    }
+    
+    const targetTimeStr = `${String(targetH).padStart(2, '0')}:${String(targetM).padStart(2, '0')}`;
+
+    // 時間がちょうど一致した場合
+    if (currentTimeStr === targetTimeStr) {
+      const alertKey = `${item.id}_${todayStr}`;
+      
+      // 本日この授業でまだ通知していない場合のみ発火
+      if (!alertedToday[alertKey]) {
+        alertedToday[alertKey] = true;
+        alert(`【${item.title}】出席登録終わった？`);
+      }
+    }
+  });
+}
+
 /* ── Summary ── */
 function updateSummary() {
   document.getElementById('sumLines').textContent = lines.length;
@@ -641,117 +738,6 @@ function updateSummary() {
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* ══════════════════════════════ */
-/* ── Timetable (時間割)  ── */
-/* ══════════════════════════════ */
-const periodTimes = {
-  1: '09:00', 2: '10:40', 3: '13:00', 4: '14:40', 5: '16:20'
-};
-const dayNames = ['', '月', '火', '水', '木', '金'];
-
-function saveTimetable() { localStorage.setItem('td_timetable', JSON.stringify(timetable)); }
-
-function renderTimetable() {
-  const grid = document.getElementById('timetableGrid');
-  const todayDow = new Date().getDay(); // 0=日, 1=月 ... 5=金
-
-  // ヘッダー行
-  let html = '<div class="tt-header"></div>'; // 左上空白
-  for (let d = 1; d <= 5; d++) {
-    const isToday = d === todayDow;
-    html += `<div class="tt-header" ${isToday ? 'style="color:var(--blue-text);font-weight:700;"' : ''}>${dayNames[d]}曜</div>`;
-  }
-
-  // 各時限
-  for (let p = 1; p <= 5; p++) {
-    html += `<div class="tt-time">${p}限<br><span style="font-size:10px">${periodTimes[p]}</span></div>`;
-    for (let d = 1; d <= 5; d++) {
-      const isToday = d === todayDow;
-      const cls = timetable.find(c => c.day == d && c.period == p);
-      if (cls) {
-        const idx = timetable.indexOf(cls);
-        html += `<div class="tt-cell ${isToday ? 'today-col' : ''}">
-          <span class="tt-subject">${esc(cls.subject)}</span>
-          <span class="tt-room"><i class="ti ti-map-pin" style="font-size:10px"></i> ${esc(cls.room)}</span>
-          <button class="tt-cell-del" onclick="deleteTimetable(${idx})" aria-label="削除"><i class="ti ti-x"></i></button>
-        </div>`;
-      } else {
-        html += `<div class="tt-cell ${isToday ? 'today-col' : ''}"></div>`;
-      }
-    }
-  }
-
-  grid.innerHTML = html;
-  document.getElementById('ttCount').textContent = timetable.length ? `登録済み: ${timetable.length}科目` : '';
-}
-
-function addTimetable() {
-  const subject = document.getElementById('ttSubject').value.trim();
-  const room = document.getElementById('ttRoom').value.trim();
-  const day = parseInt(document.getElementById('ttDay').value);
-  const period = parseInt(document.getElementById('ttPeriod').value);
-  if (!subject) { alert('科目名を入力してください'); return; }
-
-  // 同じ曜日・時限に既に登録がある場合は上書き確認
-  const existing = timetable.find(c => c.day === day && c.period === period);
-  if (existing) {
-    if (!confirm(`${dayNames[day]}曜${period}限には「${existing.subject}」が登録済みです。上書きしますか？`)) return;
-    timetable = timetable.filter(c => !(c.day === day && c.period === period));
-  }
-
-  timetable.push({ subject, room: room || '教室未設定', day, period, time: periodTimes[period] });
-  document.getElementById('ttSubject').value = '';
-  document.getElementById('ttRoom').value = '';
-  saveTimetable(); renderTimetable();
-}
-
-function deleteTimetable(i) {
-  timetable.splice(i, 1);
-  saveTimetable(); renderTimetable();
-}
-
-/* ══════════════════════════════════ */
-/* ── 出席登録忘れないくん ── */
-/* ══════════════════════════════════ */
-function checkAttendance() {
-  const now = new Date();
-  const todayDow = now.getDay(); // 0=日, 1=月 ... 5=金
-  if (todayDow < 1 || todayDow > 5) return; // 土日はスキップ
-
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-
-  const todayClasses = timetable.filter(c => c.day === todayDow);
-
-  // バナー表示用
-  let bannerHTML = '';
-
-  todayClasses.forEach(cls => {
-    const [h, m] = cls.time.split(':').map(Number);
-    const classMinutes = h * 60 + m;
-    const diff = nowMinutes - classMinutes; // 授業開始からの経過分
-
-    const alertKey = `${todayKey}_${cls.day}_${cls.period}`;
-
-    // 開始15分後（14分〜16分の間）にアラート
-    if (diff >= 15 && diff <= 16 && !alertedClasses[alertKey]) {
-      alertedClasses[alertKey] = true;
-      alert(`📢 出席登録終わった？\n\n${cls.period}限「${cls.subject}」（${cls.room}）\n\n開始時刻 ${cls.time} から15分経ちました！`);
-    }
-
-    // 授業中（開始〜90分後）ならバナーに表示
-    if (diff >= 0 && diff < 90) {
-      const attended = diff >= 15 ? '出席確認済みですか？' : `あと${15 - diff}分で出席確認リマインド`;
-      bannerHTML += `<div class="att-banner">
-        <i class="ti ti-bell-ringing" aria-hidden="true"></i>
-        ${cls.period}限「${esc(cls.subject)}」（${esc(cls.room)}）— ${attended}
-      </div>`;
-    }
-  });
-
-  document.getElementById('attBannerArea').innerHTML = bannerHTML;
 }
 </script>
 </body>
