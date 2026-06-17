@@ -139,7 +139,7 @@ VPC に沿った初期プロトタイプ(任意):
 
 | 項目 | 回答 |
 |---|---|
-| デプロイURL(Vercel等) | https://s24k2091ch-ops.github.io/RyoheiNishiwaki-web3ai-2026-v4/ |
+| デプロイURL(Vercel等) | https://ryoheinishiwaki-web3ai-2026-v4.vercel.app/ |
 | 一言紹介 | 交通機関の遅延状況リアルタイム確認 + 課題の締め切り管理が一画面でできるアプリ |
 
 > 必須ではありません。\
