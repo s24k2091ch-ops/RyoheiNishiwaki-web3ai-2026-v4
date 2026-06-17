@@ -337,6 +337,7 @@ let deadlines = JSON.parse(localStorage.getItem('td_deadlines') || '[]');
 let timetable = JSON.parse(localStorage.getItem('td_timetable') || '[]');
 let dlFilter = 'all';
 let alertedToday = {}; // { 'id_YYYY-MM-DD': true }
+let notifiedDeadlines = JSON.parse(localStorage.getItem('td_notified_deadlines') || '{}'); // { 'title_YYYY-MM-DD': true }
 
 const typeLabel = { train:'電車', subway:'地下鉄', bus:'バス' };
 const typeClass = { train:'badge-train', subway:'badge-subway', bus:'badge-bus' };
@@ -436,6 +437,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 出席アラートタイマー監視の開始
   startAttendanceMonitor();
+
+  // 締め切り通知の開始
+  requestDeadlineNotificationPermission();
 });
 
 /* ── Tabs ── */
@@ -774,6 +778,66 @@ function checkAttendanceReminders() {
         alertedToday[alertKey] = true;
         alert(`【${item.title}】出席登録終わった？`);
       }
+    }
+  });
+}
+
+/* ── Deadline Notifications ── */
+function requestDeadlineNotificationPermission() {
+  if (!('Notification' in window)) return; // 非対応ブラウザはスキップ
+
+  if (Notification.permission === 'granted') {
+    // すでに許可済み → 即時チェック＋1時間ごとに監視
+    checkDeadlineNotifications();
+    setInterval(checkDeadlineNotifications, 60 * 60 * 1000);
+  } else if (Notification.permission !== 'denied') {
+    // まだ未回答 → 許可ダイアログを表示
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        checkDeadlineNotifications();
+        setInterval(checkDeadlineNotifications, 60 * 60 * 1000);
+      }
+    });
+  }
+}
+
+function checkDeadlineNotifications() {
+  if (Notification.permission !== 'granted') return;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // 古い日付の通知記録をクリーンアップ
+  Object.keys(notifiedDeadlines).forEach(key => {
+    const keyDate = key.split('_').pop();
+    if (keyDate < todayStr) delete notifiedDeadlines[key];
+  });
+
+  deadlines.forEach(dl => {
+    const days = getDays(dl.date);
+    if (days < 0 || days > 3) return; // 3日より先・期限切れはスキップ
+
+    const notifKey = `${dl.title}_${todayStr}`;
+    if (notifiedDeadlines[notifKey]) return; // 本日すでに通知済み
+
+    // 通知を表示
+    const daysText = days === 0 ? '今日が締め切り！' : `あと${days}日で締め切り！`;
+    const body = `【${dl.subject}】${dl.title}\n${daysText}（${dl.date}）`;
+
+    try {
+      const notif = new Notification('📅 締め切りリマインダー', {
+        body,
+        icon: 'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css',
+        tag: notifKey,
+        requireInteraction: days === 0 // 当日は自動で消えないようにする
+      });
+
+      // 通知クリックでタブをフォーカス
+      notif.onclick = () => { window.focus(); notif.close(); };
+
+      notifiedDeadlines[notifKey] = true;
+      localStorage.setItem('td_notified_deadlines', JSON.stringify(notifiedDeadlines));
+    } catch (e) {
+      console.warn('通知の表示に失敗しました:', e);
     }
   });
 }
