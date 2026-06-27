@@ -3,857 +3,939 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>通学ダッシュボード</title>
+  <title>キャンパスナビ</title>
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel CDN (ブラウザ上でのJSXコンパイル用) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Tabler Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
   <style>
-    :root {
-      --bg: #f7f6f3;
-      --surface: #ffffff;
-      --surface2: #f1efe8;
-      --border: rgba(0,0,0,0.1);
-      --border-md: rgba(0,0,0,0.2);
-      --text-primary: #1a1a18;
-      --text-secondary: #5f5e5a;
-      --text-tertiary: #888780;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --blue-bg: #e6f1fb; --blue-text: #0c447c;
-      --green-bg: #eaf3de; --green-text: #27500a;
-      --purple-bg: #eeedfe; --purple-text: #3c3489;
-      --amber-bg: #faeeda; --amber-text: #854f0b;
-      --red-bg: #fcebeb; --red-text: #a32d2d;
-      --teal-bg: #e1f5ee; --teal-text: #085041;
-      --green-dot: #639922; --amber-dot: #ba7517; --red-dot: #e24b4a;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1a1a18; --surface: #23231f; --surface2: #2c2c2a;
-        --border: rgba(255, 255, 255, 0.1); --border-md: rgba(255, 255, 255, 0.2);
-        --text-primary: #f1efe8; --text-secondary: #b4b2a9; --text-tertiary: #888780;
-        --blue-bg: #042c53; --blue-text: #b5d4f4;
-        --green-bg: #173404; --green-text: #c0dd97;
-        --purple-bg: #26215c; --purple-text: #cecbf6;
-        --amber-bg: #412402; --amber-text: #fac775;
-        --red-bg: #501313; --red-text: #f7c1c1;
-        --teal-bg: #04342c; --teal-text: #9fe1cb;
-      }
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, 'Helvetica Neue', 'Hiragino Sans', 'Yu Gothic', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
-
-    /* topbar */
-    .topbar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon { width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--text-primary); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .brand h1 { font-size: 16px; font-weight: 500; }
-    .topbar-date { font-size: 12px; color: var(--text-tertiary); }
-
-    /* container */
-    .container { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-
-    /* summary */
-    .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.5rem; }
-    @media(max-width:600px){ .summary-grid { grid-template-columns: repeat(2,1fr); } }
-    .summary-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; }
-    .summary-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
-    .summary-value { font-size: 26px; font-weight: 500; }
-    .summary-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-
-    /* tabs */
-    .tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 1.5rem; }
-    .tab { font-size: 14px; font-weight: 500; color: var(--text-secondary); padding: 10px 16px; cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -0.5px; display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
-    .tab.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
-    .tab:hover:not(.active) { color: var(--text-primary); }
-    .section { display: none; }
-    .section.active { display: block; }
-
-    /* inputs */
-    input, select, textarea { font-family: inherit; }
-    .add-row { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
-    .add-row input, .add-row select { font-size: 14px; padding: 8px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); outline: none; transition: border-color 0.15s; }
-    .add-row input:focus, .add-row select:focus { border-color: var(--text-primary); }
-    .add-row input { flex: 1; min-width: 160px; }
-    .add-row select { min-width: 110px; }
-    .btn-primary { font-size: 13px; padding: 8px 16px; background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius-md); cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; transition: opacity 0.15s; }
-    .btn-primary:hover { opacity: 0.75; }
-
-    /* transit */
-    .transit-list { display: flex; flex-direction: column; gap: 10px; }
-    .transit-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
-    .tc-header { display: flex; align-items: center; justify-content: space-between; }
-    .tc-name { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .type-badge { font-size: 11px; padding: 2px 8px; border-radius: var(--radius-md); font-weight: 500; }
-    .badge-train  { background: var(--blue-bg);   color: var(--blue-text); }
-    .badge-subway { background: var(--purple-bg);  color: var(--purple-text); }
-    .badge-bus    { background: var(--green-bg);   color: var(--green-text); }
-    .tc-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-    .btn-link { font-size: 12px; padding: 5px 10px; background: none; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; text-decoration: none; transition: background 0.15s; }
-    .btn-link:hover { background: var(--surface2); }
-    .btn-del { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 4px 6px; border-radius: var(--radius-md); font-size: 16px; transition: color 0.15s; }
-    .btn-del:hover { color: var(--red-dot); }
-
-    /* manual status */
-    .status-picker { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .status-picker span { font-size: 12px; color: var(--text-secondary); }
-    .status-btn { font-size: 12px; padding: 5px 12px; border: 0.5px solid var(--border-md); border-radius: 20px; cursor: pointer; background: none; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
-    .status-btn.active-normal { background: var(--green-bg); color: var(--green-text); border-color: var(--green-text); }
-    .status-btn.active-delay  { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-text); }
-    .status-btn.active-stop   { background: var(--red-bg);   color: var(--red-text);   border-color: var(--red-text); }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot-normal { background: var(--green-dot); }
-    .dot-delay  { background: var(--amber-dot); }
-    .dot-stop   { background: var(--red-dot); }
-    .status-note { margin-top: 8px; }
-    .status-note input { width: 100%; font-size: 13px; padding: 6px 10px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text-primary); outline: none; }
-    .status-note input:focus { border-color: var(--text-primary); }
-    .status-display { margin-top: 10px; font-size: 13px; color: var(--text-secondary); display: flex; align-items: flex-start; gap: 8px; }
-    .info-pill { font-size: 12px; padding: 4px 10px; border-radius: var(--radius-md); margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; }
-    .pill-delay { background: var(--amber-bg); color: var(--amber-text); }
-    .pill-stop  { background: var(--red-bg);   color: var(--red-text); }
-    .pill-normal{ background: var(--green-bg);  color: var(--green-text); }
-    .external-links { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-    .ext-link { font-size: 12px; color: var(--blue-text); background: var(--blue-bg); padding: 4px 10px; border-radius: var(--radius-md); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: opacity 0.15s; }
-    .ext-link:hover { opacity: 0.75; }
-
-    /* deadline form */
-    .dl-form { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
-    .form-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-    .form-row:last-child { margin-bottom: 0; }
-    .form-row input, .form-row select { font-size: 14px; padding: 8px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); background: var(--bg); color: var(--text-primary); outline: none; transition: border-color 0.15s; }
-    .form-row input:focus, .form-row select:focus { border-color: var(--text-primary); }
-    .form-row input       { flex: 1; min-width: 140px; }
-    .form-row input[type="date"] { flex: 0 0 160px; }
-    .form-row select      { min-width: 110px; }
-
-    /* filter */
-    .filter-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
-    .filter-btn { font-size: 12px; padding: 5px 14px; background: none; border: 0.5px solid var(--border-md); border-radius: 20px; cursor: pointer; color: var(--text-secondary); transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
-    .filter-btn.active { background: var(--text-primary); color: var(--bg); border-color: var(--text-primary); }
-
-    /* deadline cards */
-    .dl-list { display: flex; flex-direction: column; gap: 8px; }
-    .dl-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; }
-    .urgency-bar { width: 4px; border-radius: 2px; align-self: stretch; flex-shrink: 0; min-height: 44px; }
-    .bar-urgent { background: var(--red-dot); }
-    .bar-soon   { background: var(--amber-dot); }
-    .bar-ok     { background: var(--green-dot); }
-    .bar-past   { background: var(--text-tertiary); }
-    .dl-content { flex: 1; min-width: 0; }
-    .dl-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .dl-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
-    .notif { font-size: 10px; padding: 2px 7px; border-radius: var(--radius-md); background: var(--red-bg); color: var(--red-text); font-weight: 500; white-space: nowrap; }
-    .dl-right { text-align: right; flex-shrink: 0; }
-    .days-val { font-size: 20px; font-weight: 500; }
-    .days-urgent { color: var(--red-dot); }
-    .days-soon   { color: var(--amber-dot); }
-    .days-ok     { color: var(--green-dot); }
-    .days-past   { color: var(--text-tertiary); }
-    .date-lbl { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-
-    /* empty */
-    .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary); font-size: 14px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); }
-    .empty i { font-size: 28px; display: block; margin-bottom: 10px; color: var(--text-tertiary); }
-    .empty small { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; display: block; }
-
-    /* info banner */
-    .info-banner { background: var(--teal-bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: var(--teal-text); display: flex; align-items: flex-start; gap: 8px; }
-
-    /* timetable grid */
-    .timetable-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 10px; background: var(--surface); margin-bottom: 1.5rem; }
-    .timetable-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; min-width: 700px; }
-    .tt-col { display: flex; flex-direction: column; gap: 8px; background: var(--surface2); border-radius: var(--radius-md); padding: 8px; min-height: 250px; }
-    .tt-col-header { font-size: 13px; font-weight: 600; text-align: center; padding: 6px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-md); margin-bottom: 4px; background: var(--surface); border-radius: var(--radius-md); }
-    .tt-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 8px; display: flex; flex-direction: column; gap: 4px; position: relative; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: transform 0.15s; }
-    .tt-card:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .tt-card-header { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
-    .tt-time { font-size: 11px; font-weight: 600; color: var(--blue-text); background: var(--blue-bg); padding: 1px 5px; border-radius: var(--radius-md); width: fit-content; }
-    .tt-title { font-size: 13px; font-weight: 500; word-break: break-all; margin-top: 2px; }
-    .tt-room { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 2px; margin-top: auto; }
-    .tt-card .btn-del-tt { background: none; border: none; cursor: pointer; color: var(--text-tertiary); font-size: 14px; transition: color 0.15s; display: flex; align-items: center; justify-content: center; opacity: 0.4; }
-    .tt-card:hover .btn-del-tt { opacity: 1; }
-    .tt-card .btn-del-tt:hover { color: var(--red-dot); }
-    .tt-empty-day { font-size: 11px; color: var(--text-tertiary); text-align: center; margin: auto 0; padding: 20px 0; }
+    body {
+      background: #F0F4F8;
+      margin: 0;
+      font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+      min-height: 100vh;
+    }
+    /* 横スクロール対応のスクロールバー非表示 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 <body>
+  <div id="root"></div>
 
-<nav class="topbar">
-  <div class="brand">
-    <div class="brand-icon"><i class="ti ti-layout-dashboard" aria-hidden="true"></i></div>
-    <h1>通学ダッシュボード</h1>
-  </div>
-  <span class="topbar-date" id="topDate"></span>
-</nav>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-<main class="container">
+    const DAYS = ["月", "火", "水", "木", "金", "土"];
+    const PERIODS = [
+      { p: 1, s: "09:00", e: "10:00" }, { p: 2, s: "10:00", e: "11:00" },
+      { p: 3, s: "11:00", e: "12:00" }, { p: 4, s: "12:00", e: "13:00" },
+      { p: 5, s: "13:00", e: "14:00" }, { p: 6, s: "14:00", e: "15:00" },
+      { p: 7, s: "15:00", e: "16:00" }, { p: 8, s: "16:00", e: "17:00" },
+      { p: 9, s: "17:00", e: "18:00" }, { p: 10, s: "18:00", e: "19:00" },
+    ];
 
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="summary-label"><i class="ti ti-train" aria-hidden="true"></i>登録路線・ルート</div>
-      <div class="summary-value" id="sumLines">0</div>
-      <div class="summary-sub">件</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label"><i class="ti ti-alert-triangle" aria-hidden="true"></i>遅延・障害</div>
-      <div class="summary-value" id="sumDelays" style="color:var(--amber-dot)">0</div>
-      <div class="summary-sub">件</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label"><i class="ti ti-flame" aria-hidden="true"></i>締め切り間近</div>
-      <div class="summary-value" id="sumUrgent" style="color:var(--red-dot)">0</div>
-      <div class="summary-sub">3日以内</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label"><i class="ti ti-calendar" aria-hidden="true"></i>今月の提出物</div>
-      <div class="summary-value" id="sumTotal">0</div>
-      <div class="summary-sub">件</div>
-    </div>
-  </div>
+    // 欠席回数に応じたセルの色 (0=通常授業色, 1=水色, 2=黄色, 3=赤, 4+=黒)
+    const ABSENT_COLORS = [
+      null,
+      { bg: "#B3E5FC", text: "#01579B", label: "欠1" },
+      { bg: "#FFF176", text: "#7A6000", label: "欠2" },
+      { bg: "#FFCDD2", text: "#B71C1C", label: "欠3" },
+      { bg: "#37474F", text: "#FFFFFF", label: "欠4+" },
+    ];
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('transit',this)"><i class="ti ti-train" aria-hidden="true"></i>交通機関</button>
-    <button class="tab" onclick="switchTab('deadline',this)"><i class="ti ti-calendar-due" aria-hidden="true"></i>締め切り管理</button>
-    <button class="tab" onclick="switchTab('timetable',this)"><i class="ti ti-clock" aria-hidden="true"></i>時間割</button>
-  </div>
+    const CLASS_COLORS = [
+      { bg: "#FFD9C0", text: "#7A3B10" }, { bg: "#C8E6C9", text: "#1B5E20" },
+      { bg: "#B3E5FC", text: "#01579B" }, { bg: "#F8BBD0", text: "#880E4F" },
+      { bg: "#D7CCC8", text: "#4E342E" }, { bg: "#DCEDC8", text: "#33691E" },
+      { bg: "#FFF9C4", text: "#F57F17" }, { bg: "#E1BEE7", text: "#4A148C" },
+    ];
+    const SEMESTERS = ["2026年 1学期", "2026年 2学期"];
+    const CIT_STATIONS = ["新習志野駅", "津田沼駅", "新津田沼駅"];
+    const TRANSPORT_TYPES = ["電車", "地下鉄", "バス"];
+    const TYPE_ICON = { 電車: "🚃", 地下鉄: "🚇", バス: "🚌" };
+    const DL_TYPES = ["レポート", "試験", "課題", "その他"];
+    const TYPE_COLOR = { レポート: "#B3E5FC", 試験: "#F8BBD0", 課題: "#DCEDC8", その他: "#D7CCC8" };
+    const TYPE_TEXT = { レポート: "#01579B", 試験: "#880E4F", 課題: "#33691E", その他: "#4E342E" };
 
-  <!-- Transit -->
-  <div class="section active" id="tab-transit">
-    <div class="info-banner">
-      <i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px" aria-hidden="true"></i>
-      用途に合わせて登録方法を分けることができます。出発地➔目的地を登録するとGoogleマップ連携が可能です。
-    </div>
-    
-    <!-- 2分割された登録フォームエリア -->
-    <div class="dl-form" style="background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem;">
-      
-      <!-- 1. 路線名（運行状況確認）の登録 -->
-      <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-        <i class="ti ti-activity" style="color: var(--amber-dot); font-size:14px;"></i> 路線名（運行状況確認）を登録
-      </div>
-      <div class="add-row" style="margin-bottom: 1.25rem;">
-        <input type="text" id="lineInput" placeholder="路線名（例：総武線）" onkeydown="if(event.key==='Enter')addLineOnly()" />
-        <select id="typeSelect1">
-          <option value="train">電車</option>
-          <option value="subway">地下鉄</option>
-          <option value="bus">バス</option>
-        </select>
-        <button class="btn-primary" onclick="addLineOnly()" style="background: var(--text-primary); color: var(--bg); border: none;"><i class="ti ti-plus" aria-hidden="true"></i> 路線を追加</button>
-      </div>
-
-      <div style="border-top: 1px dashed var(--border-md); margin: 1.25rem 0;"></div>
-
-      <!-- 2. 出発地 ➔ 目的地の登録 -->
-      <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-        <i class="ti ti-map-2" style="color: var(--blue-text); font-size:14px;"></i> 出発地 ➔ 目的地（Googleマップ乗換案内）を登録
-      </div>
-      <div class="add-row">
-        <input type="text" id="startInput" placeholder="出発地（例：稲毛駅）" onkeydown="if(event.key==='Enter')addRoute()" />
-        <input type="text" id="destInput" placeholder="目的地（例：津田沼駅）" onkeydown="if(event.key==='Enter')addRoute()" />
-        <select id="typeSelect2">
-          <option value="train">電車</option>
-          <option value="subway">地下鉄</option>
-          <option value="bus">バス</option>
-        </select>
-        <button class="btn-primary" onclick="addRoute()" style="background: var(--text-primary); color: var(--bg); border: none;"><i class="ti ti-plus" aria-hidden="true"></i> ルートを追加</button>
-      </div>
-    </div>
-    
-    <div class="transit-list" id="transitList"></div>
-  </div>
-
-  <!-- Deadline -->
-  <div class="section" id="tab-deadline">
-    <div class="dl-form">
-      <div class="form-row">
-        <input type="text" id="dlTitle" placeholder="提出物の名前（例：レポート第3回）" onkeydown="if(event.key==='Enter')addDeadline()" />
-        <input type="text" id="dlSubject" placeholder="科目名" style="flex:0 0 140px" />
-      </div>
-      <div class="form-row">
-        <input type="date" id="dlDate" />
-        <select id="dlType">
-          <option value="report">レポート</option>
-          <option value="exam">試験</option>
-          <option value="assignment">課題</option>
-          <option value="other">その他</option>
-        </select>
-        <button class="btn-primary" onclick="addDeadline()"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
-      </div>
-    </div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterDL('all',this)">すべて</button>
-      <button class="filter-btn" onclick="filterDL('urgent',this)"><i class="ti ti-flame" style="font-size:11px"></i> 3日以内</button>
-      <button class="filter-btn" onclick="filterDL('week',this)">1週間以内</button>
-      <button class="filter-btn" onclick="filterDL('month',this)">1ヶ月以内</button>
-    </div>
-    <div class="dl-list" id="deadlineList"></div>
-  </div>
-
-  <!-- Timetable -->
-  <div class="section" id="tab-timetable">
-    <div class="info-banner">
-      <i class="ti ti-info-circle" style="font-size:16px;flex-shrink:0;margin-top:1px" aria-hidden="true"></i>
-      今学期の時間割を登録します。授業開始の15分後に「出席登録終わった？」とポップアップでリマインドします。
-    </div>
-    <div class="dl-form">
-      <div class="form-row">
-        <select id="ttDay">
-          <option value="1">月曜日</option>
-          <option value="2">火曜日</option>
-          <option value="3">水曜日</option>
-          <option value="4">木曜日</option>
-          <option value="5">金曜日</option>
-          <option value="6">土曜日</option>
-          <option value="0">日曜日</option>
-        </select>
-        <input type="text" id="ttTitle" placeholder="科目名（例：Web3概論）" onkeydown="if(event.key==='Enter')addTimetable()" />
-      </div>
-      <div class="form-row">
-        <input type="text" id="ttRoom" placeholder="教室名（例：301教室）" style="flex: 1;" onkeydown="if(event.key==='Enter')addTimetable()" />
-        <select id="ttPeriod">
-          <option value="1">1限 (09:00〜10:00)</option>
-          <option value="2">2限 (10:00〜11:00)</option>
-          <option value="3">3限 (11:00〜12:00)</option>
-          <option value="4">4限 (12:00〜13:00)</option>
-          <option value="5">5限 (13:00〜14:00)</option>
-          <option value="6">6限 (14:00〜15:00)</option>
-          <option value="7">7限 (15:00〜16:00)</option>
-          <option value="8">8限 (16:00〜17:00)</option>
-          <option value="9">9限 (17:00〜18:00)</option>
-          <option value="10">10限 (18:00〜19:00)</option>
-        </select>
-        <button class="btn-primary" onclick="addTimetable()"><i class="ti ti-plus" aria-hidden="true"></i> 追加</button>
-      </div>
-    </div>
-    <!-- 時間割表の描画エリア -->
-    <div id="timetableList"></div>
-  </div>
-
-</main>
-
-<script>
-/* ── State ── */
-let lines = JSON.parse(localStorage.getItem('td_lines') || '[]');
-let deadlines = JSON.parse(localStorage.getItem('td_deadlines') || '[]');
-let timetable = JSON.parse(localStorage.getItem('td_timetable') || '[]');
-let dlFilter = 'all';
-let alertedToday = {}; // { 'id_YYYY-MM-DD': true }
-let notifiedDeadlines = JSON.parse(localStorage.getItem('td_notified_deadlines') || '{}'); // { 'title_YYYY-MM-DD': true }
-
-const typeLabel = { train:'電車', subway:'地下鉄', bus:'バス' };
-const typeClass = { train:'badge-train', subway:'badge-subway', bus:'badge-bus' };
-const typeIcon  = { train:'ti-train', subway:'ti-train', bus:'ti-bus' };
-const dlTypeLabel = { report:'レポート', exam:'試験', assignment:'課題', other:'その他' };
-const dayLabels = { '1': '月曜日', '2': '火曜日', '3': '水曜日', '4': '木曜日', '5': '金曜日', '6': '土曜日', '0': '日曜日' };
-
-// 時限と対応する授業開始時刻のマッピング
-const periodTimes = { 
-  '1': '09:00', 
-  '2': '10:00', 
-  '3': '11:00', 
-  '4': '12:00', 
-  '5': '13:00', 
-  '6': '14:00', 
-  '7': '15:00', 
-  '8': '16:00', 
-  '9': '17:00', 
-  '10': '18:00' 
-};
-
-/* ── Search URL builder ── */
-function searchURL(name, type, dest) {
-  const urls = [];
-
-  // 目的地(dest)が入力されている場合はGoogleマップルート案内を最優先で表示
-  if (dest) {
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(name)}&destination=${encodeURIComponent(dest)}&travelmode=transit`;
-    urls.push({ label: 'Googleマップ乗換案内', url: mapsUrl, isPrimary: true });
-  }
-
-  const q = encodeURIComponent(name + ' 運行情報');
-
-  // 公式サイトマッピング
-  const JRE = 'https://traininfo.jreast.co.jp/train_info/kanto.aspx';
-  const METRO = 'https://www.tokyometro.jp/unkou/index.html';
-  const TOEI  = 'https://www.kotsu.metro.tokyo.jp/subway/unkou.html';
-  const map = {
-    '山手線':JRE, '中央線':JRE, '京浜東北線':JRE, '総武線':JRE,
-    '東海道線':JRE, '横須賀線':JRE, '埼京線':JRE, '常磐線':JRE,
-    '南武線':JRE, '横浜線':JRE, '武蔵野線':JRE, '宇通宮線':JRE,
-    '高崎線':JRE, '湘南新宿ライン':JRE, '上野東京ライン':JRE,
-    'JR東日本':JRE,
-    '東京メトロ':METRO, '銀座線':METRO, '丸ノ内線':METRO,
-    '日比谷線':METRO, '東西線':METRO, '千代田線':METRO,
-    '有楽町線':METRO, '半蔵門線':METRO, '南北線':METRO, '副都心線':METRO,
-    '都営浅草線':TOEI, '都営三田線':TOEI, '都営新宿線':TOEI, '都営大江戸線':TOEI,
-    '東急':'https://www.tokyu.co.jp/railway/traffic_info/',
-    '小田急':'https://www.odakyu.jp/train/unkou/',
-    '京急':'https://www.keikyu.co.jp/train/operation/',
-    '西武':'https://www.seiburailway.jp/railways/operation/',
-    '東武':'https://www.tobu.co.jp/train/operation/',
-    '京王':'https://www.keio.co.jp/train/operation/',
-    '相鉄':'https://www.sotetsu.co.jp/train/operation/',
-    '京成':'https://www.keisei.co.jp/keisei/tetudou/unkou/index.php',
-    '阪急':'https://rail.hankyu.co.jp/railinfo/delay',
-    'JR西日本':'https://trafficinfo.westjr.co.jp/',
-    'JR東海':'https://traininfo.jr-central.co.jp/',
-    'JR九州':'https://www.jrkyushu.co.jp/train/info/',
-    'JR北海道':'https://www.jrhokkaido.co.jp/network/trafficinfo/',
-    '名古屋市営地下鉄':'https://www.kotsu.city.nagoya.jp/jp/pc/information/',
-    '大阪メトロ':'https://subway.osakametro.co.jp/train_info/',
-    '福岡市地下鉄':'https://subway.city.fukuoka.lg.jp/sp/train_info/',
-    '札幌市営地下鉄':'https://www.city.sapporo.jp/st/',
-  };
-
-  // 部分一致
-  for (const [key, url] of Object.entries(map)) {
-    if (name.includes(key) || key.includes(name)) {
-      urls.push({ label: '公式運行情報', url });
-      break;
+    function colorFor(name) {
+      let h = 0;
+      for (let c of name) h = c.charCodeAt(0) + ((h << 5) - h);
+      return CLASS_COLORS[Math.abs(h) % CLASS_COLORS.length];
     }
-  }
 
-  // Yahoo!路線
-  urls.push({ label: 'Yahoo!路線', url: 'https://transit.yahoo.co.jp/traininfo/area/4/' });
-  // Google検索
-  urls.push({ label: 'Google検索', url: `https://www.google.com/search?q=${q}` });
+    const SK = "campusDash3_";
+    function load(k, d) { try { const v = localStorage.getItem(SK + k); return v ? JSON.parse(v) : d; } catch { return d; } }
+    function save(k, v) { try { localStorage.setItem(SK + k, JSON.stringify(v)); } catch {} }
 
-  return urls;
-}
-
-/* ── Persist ── */
-function saveLines() { localStorage.setItem('td_lines', JSON.stringify(lines)); }
-function saveDeadlines() { localStorage.setItem('td_deadlines', JSON.stringify(deadlines)); }
-function saveTimetable() { localStorage.setItem('td_timetable', JSON.stringify(timetable)); }
-
-/* ── Init ── */
-document.addEventListener('DOMContentLoaded', () => {
-  const d = new Date();
-  document.getElementById('topDate').textContent = d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-  document.getElementById('dlDate').min = new Date().toISOString().split('T')[0];
-  renderTransit();
-  renderDeadlines();
-  renderTimetable();
-  updateSummary();
-  
-  // 出席アラートタイマー監視の開始
-  startAttendanceMonitor();
-
-  // 締め切り通知の開始
-  requestDeadlineNotificationPermission();
-});
-
-/* ── Tabs ── */
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-}
-
-/* ── Transit ── */
-function renderTransit() {
-  const el = document.getElementById('transitList');
-  if (!lines.length) {
-    el.innerHTML = `<div class="empty"><i class="ti ti-train-off"></i>路線・ルートがまだ登録されていません<small>上のフォームから追加してください</small></div>`;
-    return;
-  }
-  el.innerHTML = lines.map((line, i) => {
-    const links = searchURL(line.name, line.type, line.dest);
-    const linksHTML = links.map(l => {
-      const isPrimaryClass = l.isPrimary ? 'style="font-weight:600;background:var(--blue-bg);border:1px solid var(--blue-text);color:var(--blue-text);"' : '';
-      const icon = l.isPrimary ? 'ti-map-2' : 'ti-external-link';
-      return `<a class="ext-link" href="${l.url}" target="_blank" rel="noopener" ${isPrimaryClass}><i class="ti ${icon}" style="font-size:12px"></i>${esc(l.label)}</a>`;
-    }).join('');
-
-    const st = line.status || 'unknown';
-    const noteVal = esc(line.note || '');
-    const statusDisplay = st === 'normal'
-      ? `<span class="info-pill pill-normal"><span class="status-dot dot-normal"></span>平常運転</span>`
-      : st === 'delay'
-      ? `<span class="info-pill pill-delay"><span class="status-dot dot-delay"></span>遅延あり${line.note ? ' — ' + noteVal : ''}</span>`
-      : st === 'stop'
-      ? `<span class="info-pill pill-stop"><span class="status-dot dot-stop"></span>運転見合わせ${line.note ? ' — ' + noteVal : ''}</span>`
-      : `<span style="font-size:12px;color:var(--text-tertiary)">未確認 — 下のリンクで確認後、ステータスをセットしてください</span>`;
-
-    // 表示用のタイトル（目的地があれば矢印で繋ぐ）
-    const titleText = line.dest ? `${esc(line.name)} ➔ ${esc(line.dest)}` : esc(line.name);
-
-    return `<div class="transit-card">
-      <div class="tc-header">
-        <span class="tc-name">
-          <i class="ti ${typeIcon[line.type]}" style="font-size:18px" aria-hidden="true"></i>
-          ${titleText}
-          <span class="type-badge ${typeClass[line.type]}">${typeLabel[line.type]}</span>
-        </span>
-        <div class="tc-actions">
-          <button class="btn-del" onclick="deleteLine(${i})" aria-label="削除"><i class="ti ti-x"></i></button>
-        </div>
-      </div>
-
-      <div style="margin-top:10px">${statusDisplay}</div>
-
-      <div class="status-picker">
-        <span>ステータスを更新：</span>
-        <button class="status-btn ${st==='normal'?'active-normal':''}" onclick="setStatus(${i},'normal')">
-          <span class="status-dot dot-normal"></span>平常運転
-        </button>
-        <button class="status-btn ${st==='delay'?'active-delay':''}" onclick="setStatus(${i},'delay')">
-          <span class="status-dot dot-delay"></span>遅延
-        </button>
-        <button class="status-btn ${st==='stop'?'active-stop':''}" onclick="setStatus(${i},'stop')">
-          <span class="status-dot dot-stop"></span>見合わせ
-        </button>
-      </div>
-
-      ${st==='delay'||st==='stop' ? `<div class="status-note">
-        <input type="text" placeholder="詳細メモ（例：人身事故のため約20分遅延）" value="${noteVal}"
-          oninput="setNote(${i}, this.value)" />
-      </div>` : ''}
-
-      <div class="external-links" style="margin-top:10px">${linksHTML}</div>
-      ${line.updatedAt ? `<div style="font-size:11px;color:var(--text-tertiary);margin-top:8px">最終更新: ${esc(line.updatedAt)}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-// 1. 路線名（運行状況確認）のみ登録
-function addLineOnly() {
-  const name = document.getElementById('lineInput').value.trim();
-  if (!name) return;
-  lines.push({ 
-    name, 
-    dest: '', 
-    type: document.getElementById('typeSelect1').value, 
-    status: 'unknown', 
-    note: '', 
-    updatedAt: '' 
-  });
-  document.getElementById('lineInput').value = '';
-  saveLines(); renderTransit(); updateSummary();
-}
-
-// 2. 出発地 ➔ 目的地（Googleマップ乗換案内）登録
-function addRoute() {
-  const start = document.getElementById('startInput').value.trim();
-  const dest = document.getElementById('destInput').value.trim();
-  if (!start || !dest) {
-    alert('出発地と目的地の両方を入力してください。');
-    return;
-  }
-  lines.push({ 
-    name: start, 
-    dest: dest, 
-    type: document.getElementById('typeSelect2').value, 
-    status: 'unknown', 
-    note: '', 
-    updatedAt: '' 
-  });
-  document.getElementById('startInput').value = '';
-  document.getElementById('destInput').value = '';
-  saveLines(); renderTransit(); updateSummary();
-}
-
-function deleteLine(i) { lines.splice(i,1); saveLines(); renderTransit(); updateSummary(); }
-
-function setStatus(i, st) {
-  lines[i].status = st;
-  lines[i].updatedAt = new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
-  if (st === 'normal') lines[i].note = '';
-  saveLines(); renderTransit(); updateSummary();
-}
-
-function setNote(i, val) {
-  lines[i].note = val;
-  saveLines();
-}
-
-/* ── Deadlines ── */
-function getDays(dateStr) {
-  const t = new Date(); t.setHours(0,0,0,0);
-  const d = new Date(dateStr); d.setHours(0,0,0,0);
-  return Math.round((d-t)/86400000);
-}
-function urgCls(days) {
-  if (days < 0) return { bar:'bar-past', val:'days-past' };
-  if (days <= 3) return { bar:'bar-urgent', val:'days-urgent' };
-  if (days <= 7) return { bar:'bar-soon', val:'days-soon' };
-  return { bar:'bar-ok', val:'days-ok' };
-}
-function filtered() {
-  return deadlines.filter(d => {
-    const days = getDays(d.date);
-    if (dlFilter==='urgent') return days>=0&&days<=3;
-    if (dlFilter==='week')   return days>=0&&days<=7;
-    if (dlFilter==='month')  return days>=0&&days<=31;
-    return true;
-  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
-}
-
-function renderDeadlines() {
-  const el = document.getElementById('deadlineList');
-  if (!deadlines.length) {
-    el.innerHTML = `<div class="empty"><i class="ti ti-clipboard-off"></i>提出物がまだ登録されていません</div>`; return;
-  }
-  const items = filtered();
-  if (!items.length) {
-    el.innerHTML = `<div class="empty"><i class="ti ti-filter-off"></i>該当する提出物はありません</div>`; return;
-  }
-  el.innerHTML = items.map(dl => {
-    const days = getDays(dl.date);
-    const c = urgCls(days);
-    const txt = days<0?'期限切れ':days===0?'今日！':`あと${days}日`;
-    const dateStr = new Date(dl.date).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'});
-    const notif = days>=0&&days<=3?'<span class="notif">要注意</span>':'';
-    const idx = deadlines.indexOf(dl);
-    return `<div class="dl-card">
-      <div class="urgency-bar ${c.bar}"></div>
-      <div class="dl-content">
-        <div class="dl-title">${esc(dl.title)} ${notif}</div>
-        <div class="dl-meta"><i class="ti ti-book" style="font-size:12px;margin-right:4px" aria-hidden="true"></i>${esc(dl.subject)} &nbsp;·&nbsp; ${dlTypeLabel[dl.type]}</div>
-      </div>
-      <div class="dl-right">
-        <div class="days-val ${c.val}">${txt}</div>
-        <div class="date-lbl">${dateStr}</div>
-      </div>
-      <button class="btn-del" onclick="deleteDL(${idx})" aria-label="削除"><i class="ti ti-x"></i></button>
-    </div>`;
-  }).join('');
-}
-
-function addDeadline() {
-  const title = document.getElementById('dlTitle').value.trim();
-  const date  = document.getElementById('dlDate').value;
-  if (!title||!date) { alert('名前と締め切り日を入力してください'); return; }
-  deadlines.push({
-    title,
-    subject: document.getElementById('dlSubject').value.trim() || '科目未設定',
-    date,
-    type: document.getElementById('dlType').value
-  });
-  document.getElementById('dlTitle').value = '';
-  document.getElementById('dlSubject').value = '';
-  document.getElementById('dlDate').value = '';
-  saveDeadlines(); renderDeadlines(); updateSummary();
-}
-
-function deleteDL(i) { deadlines.splice(i,1); saveDeadlines(); renderDeadlines(); updateSummary(); }
-
-function filterDL(f, btn) {
-  dlFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderDeadlines();
-}
-
-/* ── Timetable ── */
-function renderTimetable() {
-  const el = document.getElementById('timetableList');
-  if (!timetable.length) {
-    el.innerHTML = `<div class="empty"><i class="ti ti-calendar-time"></i>時間割がまだ登録されていません<small>上のフォームから追加してください</small></div>`;
-    return;
-  }
-
-  // 曜日順（月=1, 火=2, 水=3, 木=4, 金=5, 土=6, 日=0）
-  const dayKeys = ['1', '2', '3', '4', '5', '6', '0'];
-  
-  let html = `<div class="timetable-wrapper">
-    <div class="timetable-grid">`;
-
-  dayKeys.forEach(dayKey => {
-    // period（時限）順にソート。periodが無い古いデータはtimeでソート
-    const items = timetable.filter(t => t.day === dayKey).sort((a,b) => {
-      if (a.period && b.period) {
-        return parseInt(a.period) - parseInt(b.period);
+    function gmapsRouteUrl(from, to, arrive) {
+      const base = `https://www.google.com/maps/dir/${encodeURIComponent(from)}/${encodeURIComponent(to)}`;
+      if (arrive) {
+        const [h, m] = arrive.split(":").map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        if (d < new Date()) d.setDate(d.getDate() + 1);
+        const tzOffsetMs = d.getTimezoneOffset() * 60 * 1000;
+        const ts = Math.floor((d.getTime() - tzOffsetMs) / 1000);
+        return `${base}/data=!4m6!4m5!2m3!6e1!7e2!8j${ts}!3e3`;
       }
-      return a.time.localeCompare(b.time);
-    });
-    
-    html += `<div class="tt-col">
-      <div class="tt-col-header">${dayLabels[dayKey].replace('曜日', '')}</div>`;
-      
-    if (items.length === 0) {
-      html += `<div class="tt-empty-day">-</div>`;
-    } else {
-      items.forEach(item => {
-        // 時限表示用（古いデータへの互換性対応）
-        const timeDisplay = item.period 
-          ? `${item.period}限<br><span style="font-size:9px;color:var(--text-secondary);">${periodTimes[item.period]}~</span>` 
-          : esc(item.time);
-        
-        html += `<div class="tt-card">
-          <div class="tt-card-header">
-            <span class="tt-time" style="line-height: 1.2; padding: 2px 5px; text-align: center;">${timeDisplay}</span>
-            <button class="btn-del-tt" onclick="deleteTimetable('${item.id}')" aria-label="削除"><i class="ti ti-x"></i></button>
+      return `${base}/data=!3m1!4b1!4m2!4m1!3e3`;
+    }
+
+    function App() {
+      const [tab, setTab] = useState("timetable");
+      const [sem, setSem] = useState(0);
+      const [classes, setClasses] = useState(() => load("classes", {}));
+      const [absences, setAbsences] = useState(() => load("absences", {})); // {semKey_cellKey: count}
+      const [deadlines, setDeadlines] = useState(() => load("deadlines", []));
+      const [routes, setRoutes] = useState(() => load("routes", []));
+      const [tripRoutes, setTripRoutes] = useState(() => load("trips", []));
+      const [citRoutes, setCitRoutes] = useState(() => load("cit", []));
+      const [modal, setModal] = useState(null);
+      const [editCell, setEditCell] = useState(null);
+      const [cellForm, setCellForm] = useState({ name: "", room: "", periodEnd: null });
+      const [dlForm, setDlForm] = useState({ title: "", date: "", type: "レポート" });
+      const [routeForm, setRouteForm] = useState({ name: "", type: "電車" });
+      const [tripForm, setTripForm] = useState({ from: "", to: "", type: "電車", arrive: "" });
+      const [citForm, setCitForm] = useState({ from: "", to: "新習志野駅", type: "電車", arrive: "" });
+      const [semMenu, setSemMenu] = useState(false);
+      const [weather, setWeather] = useState(null); // { code, tempMax, precip, comment, bg, emoji }
+      // 出席通知: { key, name, period } が入ったら通知バナー表示
+      const [attendanceAlert, setAttendanceAlert] = useState(null);
+      const timerRefs = useRef({});
+
+      const todayDow = new Date().getDay();
+      const todayDayIdx = todayDow === 0 ? -1 : todayDow - 1;
+
+      useEffect(() => { save("classes", classes); }, [classes]);
+      useEffect(() => { save("absences", absences); }, [absences]);
+      useEffect(() => { save("deadlines", deadlines); }, [deadlines]);
+      useEffect(() => { save("routes", routes); }, [routes]);
+      useEffect(() => { save("trips", tripRoutes); }, [tripRoutes]);
+      useEffect(() => { save("cit", citRoutes); }, [citRoutes]);
+
+      // 締め切りカウント用の日数計算関数
+      function getDays(dateStr) {
+        const t = new Date(); t.setHours(0,0,0,0);
+        const d = new Date(dateStr); d.setHours(0,0,0,0);
+        return Math.round((d-t)/86400000);
+      }
+
+      // 締め切りプッシュ通知（Notification API）のマージ
+      useEffect(() => {
+        function checkDeadlineNotifications() {
+          if (!('Notification' in window) || Notification.permission !== 'granted') return;
+          
+          const todayStr = new Date().toISOString().split('T')[0];
+          const notifiedDeadlines = JSON.parse(localStorage.getItem('td_notified_deadlines') || '{}');
+
+          // 古い日付の通知記録をクリーンアップ
+          Object.keys(notifiedDeadlines).forEach(key => {
+            const keyDate = key.split('_').pop();
+            if (keyDate < todayStr) delete notifiedDeadlines[key];
+          });
+
+          deadlines.forEach(dl => {
+            const days = getDays(dl.date);
+            if (days < 0 || days > 3) return; // 3日より先・期限切れはスキップ
+
+            const notifKey = `${dl.title}_${todayStr}`;
+            if (notifiedDeadlines[notifKey]) return; // 本日すでに通知済み
+
+            const daysText = days === 0 ? '今日が締め切り！' : `あと${days}日で締め切り！`;
+            const body = `【${dl.type}】${dl.title}\n${daysText}（${dl.date}）`;
+
+            try {
+              const notif = new Notification('📅 締め切りリマインダー', {
+                body,
+                tag: notifKey,
+                requireInteraction: days === 0
+              });
+
+              notif.onclick = () => { window.focus(); notif.close(); };
+              notifiedDeadlines[notifKey] = true;
+              localStorage.setItem('td_notified_deadlines', JSON.stringify(notifiedDeadlines));
+            } catch (e) {
+              console.warn('通知の表示に失敗しました:', e);
+            }
+          });
+        }
+
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            checkDeadlineNotifications();
+            const interval = setInterval(checkDeadlineNotifications, 60 * 60 * 1000);
+            return () => clearInterval(interval);
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                checkDeadlineNotifications();
+              }
+            });
+          }
+        }
+      }, [deadlines]);
+
+      // 天気取得（Open-Meteo, 習志野市）
+      useEffect(() => {
+        const WMO = {
+          0:  { label:"快晴",      emoji:"☀️",  bg:"#FFF8E1", textBg:"#FFB300" },
+          1:  { label:"晴れ",      emoji:"🌤️",  bg:"#FFF8E1", textBg:"#FFB300" },
+          2:  { label:"一部曇り",  emoji:"⛅",  bg:"#ECEFF1", textBg:"#78909C" },
+          3:  { label:"曇り",      emoji:"☁️",  bg:"#ECEFF1", textBg:"#546E7A" },
+          45: { label:"霧",        emoji:"🌫️",  bg:"#ECEFF1", textBg:"#546E7A" },
+          48: { label:"霧",        emoji:"🌫️",  bg:"#ECEFF1", textBg:"#546E7A" },
+          51: { label:"霧雨",      emoji:"🌦️",  bg:"#E3F2FD", textBg:"#1976D2" },
+          53: { label:"霧雨",      emoji:"🌦️",  bg:"#E3F2FD", textBg:"#1976D2" },
+          55: { label:"強い霧雨",  emoji:"🌧️",  bg:"#E3F2FD", textBg:"#1565C0" },
+          61: { label:"小雨",      emoji:"🌧️",  bg:"#E3F2FD", textBg:"#1565C0" },
+          63: { label:"雨",        emoji:"🌧️",  bg:"#BBDEFB", textBg:"#0D47A1" },
+          65: { label:"大雨",      emoji:"⛈️",  bg:"#BBDEFB", textBg:"#0D47A1" },
+          71: { label:"小雪",      emoji:"🌨️",  bg:"#E8EAF6", textBg:"#3949AB" },
+          73: { label:"雪",        emoji:"❄️",  bg:"#E8EAF6", textBg:"#283593" },
+          75: { label:"大雪",      emoji:"❄️",  bg:"#E8EAF6", textBg:"#1A237E" },
+          80: { label:"にわか雨",  emoji:"🌦️",  bg:"#E3F2FD", textBg:"#1565C0" },
+          81: { label:"雨",        emoji:"🌧️",  bg:"#BBDEFB", textBg:"#0D47A1" },
+          82: { label:"激しい雨",  emoji:"⛈️",  bg:"#BBDEFB", textBg:"#0D47A1" },
+          95: { label:"雷雨",      emoji:"⛈️",  bg:"#EDE7F6", textBg:"#4527A0" },
+          96: { label:"雷雨・雹",  emoji:"⛈️",  bg:"#EDE7F6", textBg:"#311B92" },
+          99: { label:"激しい雷雨",emoji:"⛈️",  bg:"#EDE7F6", textBg:"#311B92" },
+        };
+        // 天気コードからコメントを生成
+        function makeComment(code, tempMax, precip) {
+          const isRainy = [51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+          const isHeavy = [65,82,95,96,99].includes(code);
+          const isSnow  = [71,73,75].includes(code);
+          const isFoggy = [45,48].includes(code);
+          const isCloudy= [2,3].includes(code);
+          const isSunny = [0,1].includes(code);
+          const isHot   = tempMax >= 30;
+          const isCold  = tempMax <= 5;
+
+          if (isHeavy)  return "今日は大雨だ⚡ 交通機関が乱れる可能性大！早めに家を出よう！";
+          if (isRainy && precip >= 5) return "今日は雨☂️ 交通機関が乱れるかもしれないから早めに家を出よう！";
+          if (isRainy)  return "今日は雨っぽいね☂️ 傘を忘れずに！遅刻しないよう早めに出発しよう！";
+          if (isSnow)   return "雪が降るかも❄️ 路面が滑りやすいし電車が遅れるかも。いつもより早く出よう！";
+          if (isFoggy)  return "霧で視界が悪いね🌫️ 交通機関に影響が出るかも。時間に余裕を持って！";
+          if (isCloudy) return "今日は曇りか〜☁️ まぁ頑張ろう！";
+          if (isSunny && isHot) return `今日は晴れだけど気温${tempMax}℃でめちゃ暑い🥵 熱中症に気をつけてね！`;
+          if (isSunny && isCold) return `晴れてるけど${tempMax}℃で寒い🥶 しっかり着込んで行こう！`;
+          if (isSunny)  return "今日はいい天気だね☀️ 気持ちよく登校しよう！頑張れ〜！";
+          return "今日も一日頑張ろう💪 遅刻しないようにね！";
+        }
+
+        fetch("https://api.open-meteo.com/v1/forecast?latitude=35.67&longitude=140.02&daily=weathercode,temperature_2m_max,precipitation_sum&timezone=Asia%2FTokyo&forecast_days=1")
+          .then(r => r.json())
+          .then(data => {
+            const code = data.daily.weathercode[0];
+            const tempMax = Math.round(data.daily.temperature_2m_max[0]);
+            const precip = data.daily.precipitation_sum[0] || 0;
+            const w = WMO[code] || WMO[3];
+            setWeather({
+              label: w.label, emoji: w.emoji, bg: w.bg, textBg: w.textBg,
+              tempMax, precip,
+              comment: makeComment(code, tempMax, precip),
+              isRainy: [51,53,55,61,63,65,80,81,82,95,96,99].includes(code),
+            });
+          })
+          .catch(() => {}); // 失敗時は非表示のまま
+      }, []);
+
+      const semKey = `s${sem}`;
+      const semCls = classes[semKey] || {};
+      const ck = (d, p) => `${d}_${p}`;
+      const absKey = (cellKey) => `${semKey}_${cellKey}`;
+      const getAbsent = (cellKey) => absences[absKey(cellKey)] || 0;
+
+      const soon = deadlines.filter(d => { const diff = getDays(d.date); return diff >= 0 && diff <= 3; }).length;
+      const totalTransport = routes.length + tripRoutes.length + citRoutes.length;
+
+      // 授業開始15分後に出席登録通知を仕掛ける
+      function scheduleAttendanceAlert(day, period, key, name) {
+        // 今日の授業かチェック
+        if (day !== todayDayIdx) return;
+        const periodInfo = PERIODS[period - 1];
+        if (!periodInfo) return;
+        const [sh, sm] = periodInfo.s.split(":").map(Number);
+        const now = new Date();
+        const classStart = new Date();
+        classStart.setHours(sh, sm, 0, 0);
+        const alertTime = new Date(classStart.getTime() + 15 * 60 * 1000);
+        const delay = alertTime - now;
+        if (delay < 0) return; // 既に15分経過していたら無視
+
+        // 既存タイマーをクリア
+        if (timerRefs.current[key]) clearTimeout(timerRefs.current[key]);
+        timerRefs.current[key] = setTimeout(() => {
+          setAttendanceAlert({ key, name, period });
+        }, delay);
+      }
+
+      // classesが変わったとき、今日の授業すべてにタイマーをセット
+      useEffect(() => {
+        Object.entries(semCls).forEach(([cellKey, cls]) => {
+          const [dayStr, periodStr] = cellKey.split("_");
+          scheduleAttendanceAlert(Number(dayStr), Number(periodStr), cellKey, cls.name);
+        });
+        return () => { Object.values(timerRefs.current).forEach(clearTimeout); };
+      }, [classes, sem]);
+
+      function openCell(day, period) {
+        // タップしたセルが「続き」行なら先頭セルを探す
+        let headPeriod = period;
+        for (let p = period - 1; p >= 1; p--) {
+          const prevKey = ck(day, p);
+          const prev = semCls[prevKey];
+          if (prev && prev.spanTo >= period) { headPeriod = p; break; }
+          if (!prev || !prev.spanTo || prev.spanTo < p) break;
+        }
+        const key = ck(day, headPeriod);
+        const ex = semCls[key];
+        setCellForm(ex ? { name: ex.name, room: ex.room || "", periodEnd: ex.spanTo || headPeriod } : { name: "", room: "", periodEnd: headPeriod });
+        setEditCell({ day, period: headPeriod, key });
+        setModal("cell");
+      }
+
+      function saveCell() {
+        const { day, period: periodStart, key } = editCell;
+        const periodEnd = cellForm.periodEnd || periodStart;
+        setClasses(prev => {
+          const next = { ...prev, [semKey]: { ...(prev[semKey] || {}) } };
+          // 既存のスパンを全部削除（古い範囲をクリア）
+          const oldCls = prev[semKey]?.[key];
+          if (oldCls) {
+            const oldEnd = oldCls.spanTo || periodStart;
+            for (let p = periodStart; p <= oldEnd; p++) delete next[semKey][ck(day, p)];
+          }
+          if (!cellForm.name.trim()) return next;
+          // 新しいスパン全セルに書き込む
+          const end = Math.max(periodStart, periodEnd);
+          for (let p = periodStart; p <= end; p++) {
+            next[semKey][ck(day, p)] = {
+              name: cellForm.name.trim(),
+              room: cellForm.room.trim(),
+              spanHead: p === periodStart,  // 先頭セルのみtrue
+              spanTo: end,                  // 先頭セルに終了限を記録
+            };
+          }
+          return next;
+        });
+        setModal(null);
+      }
+
+      function markAttended(cellKey) {
+        // 出席ボタンを押したら欠席カウントを増やさない（通知を消すだけ）
+        setAttendanceAlert(null);
+      }
+
+      function markAbsent(cellKey) {
+        // 欠席としてカウント
+        setAbsences(prev => {
+          const ak = absKey(cellKey);
+          return { ...prev, [ak]: (prev[ak] || 0) + 1 };
+        });
+        setAttendanceAlert(null);
+      }
+
+      function resetAbsent(cellKey) {
+        setAbsences(prev => {
+          const next = { ...prev };
+          delete next[absKey(cellKey)];
+          return next;
+        });
+      }
+
+      function addDeadline() {
+        if (!dlForm.title.trim() || !dlForm.date) return;
+        setDeadlines(p => [...p, { id: Date.now(), ...dlForm }]);
+        setDlForm({ title: "", date: "", type: "レポート" });
+        setModal(null);
+      }
+
+      function addRoute() {
+        if (!routeForm.name.trim()) return;
+        setRoutes(p => [...p, { id: Date.now(), ...routeForm }]);
+        setRouteForm({ name: "", type: "電車" });
+        setModal(null);
+      }
+
+      function addTrip() {
+        if (!tripForm.from.trim() || !tripForm.to.trim()) return;
+        setTripRoutes(p => [...p, { id: Date.now(), ...tripForm }]);
+        setTripForm({ from: "", to: "", type: "電車", arrive: "" });
+        setModal(null);
+      }
+
+      function addCit() {
+        if (!citForm.from.trim()) return;
+        setCitRoutes(p => [...p, { id: Date.now(), ...citForm }]);
+        setCitForm({ from: "", to: "新習志野駅", type: "電車", arrive: "" });
+        setModal(null);
+      }
+
+      // セルの色を欠席回数で決定
+      function cellColor(cellKey, className) {
+        const absent = getAbsent(cellKey);
+        if (absent === 0) return colorFor(className);
+        const ac = ABSENT_COLORS[Math.min(absent, 4)];
+        return { bg: ac.bg, text: ac.text };
+      }
+
+      const inputStyle = {
+        width: "100%", padding: "10px 12px", borderRadius: 10,
+        border: "1.5px solid #D0DCE8", fontSize: 14, boxSizing: "border-box", outline: "none", fontFamily: "inherit",
+      };
+      const primaryBtn = {
+        width: "100%", padding: 13, borderRadius: 12, border: "none",
+        background: "#1565C0", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer",
+        marginTop: 8, display: "block", fontFamily: "inherit",
+      };
+      const typeChip = (active) => ({
+        padding: "6px 14px", borderRadius: 20, border: "1.5px solid",
+        borderColor: active ? "#1565C0" : "#D0DCE8", background: active ? "#EBF3FF" : "#fff",
+        color: active ? "#1565C0" : "#7A8A9A", fontSize: 13, fontWeight: active ? 700 : 400,
+        cursor: "pointer", fontFamily: "inherit",
+      });
+
+      return (
+        <div style={{ fontFamily: "'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif", maxWidth: 420, margin: "0 auto", background: "#F0F4F8", minHeight: "100vh", paddingBottom: 24 }}>
+
+          {/* ── 出席登録通知バナー ── */}
+          {attendanceAlert && (
+            <div style={{ position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 420, zIndex: 500, padding: "0 12px", boxSizing: "border-box" }}>
+              <div style={{ background: "#1A2332", borderRadius: "0 0 16px 16px", padding: "14px 16px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+                <div style={{ fontSize: 12, color: "#9AAABB", marginBottom: 4 }}>⏰ 出席登録の確認</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
+                  {attendanceAlert.period}限「{attendanceAlert.name}」の出席登録は完了しましたか？
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => markAttended(attendanceAlert.key)}
+                    style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#2E7D32", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    ✅ 出席した
+                  </button>
+                  <button onClick={() => markAbsent(attendanceAlert.key)}
+                    style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#C62828", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                    ❌ 欠席した
+                  </button>
+                  <button onClick={() => setAttendanceAlert(null)}
+                    style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #445566", background: "transparent", color: "#9AAABB", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+                    後で
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── 天気カード ── */}
+          {weather && (
+            <div style={{ margin: "12px 12px 0", borderRadius: 16, overflow: "hidden", background: weather.bg, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+              <div style={{ padding: "12px 14px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                {/* 学生キャラクター */}
+                <div style={{ flexShrink: 0, position: "relative" }}>
+                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* 体 */}
+                    <rect x="16" y="30" width="20" height="18" rx="6" fill="#1565C0"/>
+                    {/* ランドセル */}
+                    <rect x="28" y="28" width="9" height="13" rx="3" fill="#C62828"/>
+                    <rect x="30" y="26" width="5" height="4" rx="2" fill="#C62828"/>
+                    {/* 頭 */}
+                    <circle cx="26" cy="20" r="11" fill="#FFD180"/>
+                    {/* 髪 */}
+                    <ellipse cx="26" cy="11" rx="10" ry="5" fill="#4E342E"/>
+                    <rect x="16" y="11" width="5" height="8" rx="2" fill="#4E342E"/>
+                    {/* 目 */}
+                    <circle cx="22" cy="20" r="1.8" fill="#1A2332"/>
+                    <circle cx="30" cy="20" r="1.8" fill="#1A2332"/>
+                    {/* 口（天気によって変化） */}
+                    {weather.isRainy
+                      ? <path d="M22 25 Q26 23 30 25" stroke="#1A2332" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                      : <path d="M22 24 Q26 27 30 24" stroke="#1A2332" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                    }
+                    {/* 腕 */}
+                    <rect x="7" y="30" width="10" height="4" rx="2" fill="#FFD180"/>
+                    <rect x="35" y="30" width="10" height="4" rx="2" fill="#FFD180"/>
+                    {/* 傘（雨の日のみ） */}
+                    {weather.isRainy && (
+                      <>
+                        <line x1="9" y1="34" x2="9" y2="44" stroke="#1565C0" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M4 34 Q9 28 14 34" fill="#42A5F5" stroke="#1565C0" strokeWidth="1"/>
+                      </>
+                    )}
+                  </svg>
+                  {/* 吹き出し三角 */}
+                  <div style={{ position: "absolute", left: 52, top: 14, width: 0, height: 0, borderTop: "6px solid transparent", borderBottom: "6px solid transparent", borderRight: `8px solid rgba(255,255,255,0.85)` }} />
+                </div>
+                {/* 吹き出し */}
+                <div style={{ flex: 1, background: "rgba(255,255,255,0.85)", borderRadius: 12, padding: "10px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                    <span style={{ fontSize: 20 }}>{weather.emoji}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: weather.textBg }}>{weather.label}</span>
+                    <span style={{ fontSize: 11, color: "#7A8A9A", marginLeft: "auto" }}>最高{weather.tempMax}℃</span>
+                    {weather.precip > 0 && <span style={{ fontSize: 11, color: "#1565C0" }}>💧{weather.precip}mm</span>}
+                  </div>
+                  <div style={{ fontSize: 13, color: "#1A2332", lineHeight: 1.55, fontWeight: weather.isRainy ? 600 : 400 }}>
+                    {weather.comment}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Header ── */}
+          <div style={{ background: "#fff", borderBottom: "1px solid #E8ECF0", padding: "16px 16px 0", marginTop: attendanceAlert ? 110 : 0, transition: "margin-top 0.2s" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1A2332" }}>🎓 キャンパスナビ</h1>
+              {tab === "timetable" && (
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setSemMenu(v => !v)} style={{ fontSize: 12, padding: "5px 12px", border: "1px solid #C8D0DC", borderRadius: 20, background: "#fff", cursor: "pointer", color: "#445566", fontWeight: 600, fontFamily: "inherit" }}>
+                    {SEMESTERS[sem]} ▾
+                  </button>
+                  {semMenu && (
+                    <div style={{ position: "absolute", right: 0, top: 34, background: "#fff", border: "1px solid #C8D0DC", borderRadius: 10, boxShadow: "0 4px 12px rgba(0,0,0,0.12)", zIndex: 100, minWidth: 160, overflow: "hidden" }}>
+                      {SEMESTERS.map((s, i) => (
+                        <div key={i} onClick={() => { setSem(i); setSemMenu(false); }}
+                          style={{ padding: "10px 16px", cursor: "pointer", fontSize: 13, background: sem === i ? "#EBF3FF" : "#fff", color: sem === i ? "#1565C0" : "#333", fontWeight: sem === i ? 700 : 400 }}>
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Badges */}
+            <div className="no-scrollbar" style={{ display: "flex", gap: 8, paddingBottom: 12, overflowX: "auto" }}>
+              {[
+                [totalTransport, "登録路線・ルート", "#E8F4FD", "#1565C0"],
+                [soon, "締め切り間近", soon > 0 ? "#FDECEA" : "#F0F4F8", soon > 0 ? "#C62828" : "#7A8A9A"],
+                [deadlines.length, "今月の提出", "#E8F5E9", "#2E7D32"],
+              ].map(([v, l, bg, tc]) => (
+                <div key={l} style={{ background: bg, borderRadius: 10, padding: "6px 14px", flexShrink: 0 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: tc }}>{v}</div>
+                  <div style={{ fontSize: 10, color: tc, opacity: 0.75 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tab bar */}
+            <div style={{ display: "flex", borderTop: "1px solid #E8ECF0" }}>
+              {[["timetable", "時間割"], ["deadline", "締め切り"], ["transport", "交通機関"]].map(([id, label]) => (
+                <button key={id} onClick={() => setTab(id)} style={{ flex: 1, padding: "10px 0", border: "none", background: "none", cursor: "pointer", fontSize: 13, fontWeight: tab === id ? 700 : 400, color: tab === id ? "#1565C0" : "#8899AA", borderBottom: tab === id ? "2.5px solid #1565C0" : "2.5px solid transparent", fontFamily: "inherit" }}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-          <span class="tt-title" title="${esc(item.title)}">${esc(item.title)}</span>
-          <span class="tt-room"><i class="ti ti-map-pin" style="font-size:10px;" aria-hidden="true"></i>${esc(item.room)}</span>
-        </div>`;
-      });
+
+          {/* ── Timetable ── */}
+          {tab === "timetable" && (
+            <div style={{ padding: "12px 8px" }}>
+              {/* 欠席色の凡例 */}
+              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8, flexWrap: "wrap", padding: "0 4px" }}>
+                <span style={{ fontSize: 10, color: "#9AAABB" }}>欠席：</span>
+                {[
+                  { label: "1回", bg: "#B3E5FC", text: "#01579B" },
+                  { label: "2回", bg: "#FFF176", text: "#7A6000" },
+                  { label: "3回", bg: "#FFCDD2", text: "#B71C1C" },
+                  { label: "4回+", bg: "#37474F", text: "#fff" },
+                ].map(c => (
+                  <span key={c.label} style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: c.bg, color: c.text, fontWeight: 700 }}>{c.label}</span>
+                ))}
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}>
+                {/* Day header */}
+                <div style={{ display: "grid", gridTemplateColumns: "40px repeat(6,1fr)", borderBottom: "1px solid #E8ECF0" }}>
+                  <div />
+                  {DAYS.map((d, di) => (
+                    <div key={d} style={{ padding: "7px 2px", textAlign: "center", fontSize: 13, fontWeight: 700, color: di === 5 ? "#1565C0" : di === todayDayIdx ? "#C62828" : "#3A4A5C", background: di === todayDayIdx ? "#F5F9FF" : "transparent" }}>
+                      {d}
+                      {di === todayDayIdx && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#1565C0", margin: "2px auto 0" }} />}
+                    </div>
+                  ))}
+                </div>
+                {/* Period rows */}
+                {PERIODS.map(({ p, s, e }) => (
+                  <div key={p} style={{ display: "grid", gridTemplateColumns: "40px repeat(6,1fr)", borderBottom: "1px solid #F4F6F8" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4px 2px", borderRight: "1px solid #F4F6F8", minHeight: 62 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#3A4A5C" }}>{p}</div>
+                      <div style={{ fontSize: 8, color: "#9AAABB", lineHeight: 1.3, textAlign: "center" }}>{s}</div>
+                      <div style={{ fontSize: 8, color: "#9AAABB", lineHeight: 1.3, textAlign: "center" }}>〜{e}</div>
+                    </div>
+                    {DAYS.map((d, di) => {
+                      const key = ck(di, p);
+                      const cls = semCls[key];
+                      const absent = getAbsent(key);
+                      // 続き行（spanHead===false）は色だけ塗る
+                      const isContinuation = cls && cls.spanHead === false;
+                      const col = cls ? cellColor(key, cls.name) : null;
+                      return (
+                        <div key={d} onClick={() => openCell(di, p)}
+                          style={{ minHeight: 62, cursor: "pointer", padding: cls ? 3 : 4, background: cls ? col.bg : di === todayDayIdx ? "#F5F9FF" : "#fff", borderRight: di < 5 ? "1px solid #F4F6F8" : "none", borderRadius: cls ? 6 : 0, margin: cls ? 2 : 0, position: "relative",
+                            // 続き行は上の角を消して隣接して見せる
+                            borderTop: isContinuation ? "1px dashed rgba(0,0,0,0.08)" : undefined,
+                          }}>
+                          {cls && !isContinuation && (
+                            <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: col.text, lineHeight: 1.3, wordBreak: "break-all" }}>{cls.name}</div>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                                {cls.room && <div style={{ fontSize: 9, color: col.text, opacity: 0.75, background: "rgba(255,255,255,0.4)", borderRadius: 4, padding: "1px 4px" }}>{cls.room}</div>}
+                                {absent > 0 && (
+                                  <div style={{ fontSize: 9, fontWeight: 700, color: col.text, background: "rgba(255,255,255,0.5)", borderRadius: 4, padding: "1px 4px", marginLeft: "auto" }}>
+                                    欠{absent}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {/* 続き行：終了限の行だけ「〜{p}限」を薄く表示 */}
+                          {cls && isContinuation && cls.spanTo === p && (
+                            <div style={{ height: "100%", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: 3 }}>
+                              <div style={{ fontSize: 8, color: col.text, opacity: 0.6 }}>〜{p}限</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              <p style={{ textAlign: "center", fontSize: 11, color: "#9AAABB", marginTop: 10 }}>セルをタップして授業を登録・出席管理</p>
+            </div>
+          )}
+
+          {/* ── Deadline ── */}
+          {tab === "deadline" && (
+            <div style={{ padding: 16 }}>
+              <button onClick={() => setModal("deadline")} style={{ width: "100%", padding: 12, borderRadius: 12, border: "1.5px dashed #B0C4D8", background: "#F8FAFC", cursor: "pointer", fontSize: 14, color: "#1565C0", fontWeight: 600, marginBottom: 16, fontFamily: "inherit" }}>
+                ＋ 締め切りを追加
+              </button>
+              {deadlines.length === 0
+                ? <div style={{ textAlign: "center", color: "#9AAABB", padding: "40px 0", fontSize: 14 }}>締め切りはまだありません</div>
+                : [...deadlines].sort((a, b) => new Date(a.date) - new Date(b.date)).map(d => {
+                  const diff = getDays(d.date);
+                  const urgent = diff >= 0 && diff <= 3;
+                  return (
+                    <div key={d.id} style={{ background: "#fff", borderRadius: 12, padding: "12px 16px", marginBottom: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: urgent ? "1.5px solid #EF9A9A" : "1px solid #EBF0F6", display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "#1A2332" }}>{d.title}</div>
+                        <div style={{ fontSize: 12, color: "#7A8A9A", marginTop: 3 }}>{d.date}
+                          <span style={{ color: diff >= 0 ? (urgent ? "#C62828" : "#2E7D32") : "#9AAABB", fontWeight: 600 }}>
+                            {diff >= 0 ? `（あと${diff}日）` : "（期限切れ）"}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: TYPE_COLOR[d.type] || "#E8ECF0", color: TYPE_TEXT[d.type] || "#445566", fontWeight: 600, flexShrink: 0 }}>{d.type}</div>
+                      <button onClick={() => setDeadlines(p => p.filter(x => x.id !== d.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#C8D0DC", padding: 0, lineHeight: 1 }}>×</button>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* ── Transport ── */}
+          {tab === "transport" && (
+            <div style={{ padding: 16 }}>
+              <p style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 14, lineHeight: 1.6 }}>
+                用途に合わせて登録方法を分けることができます。出発地→目的地を登録するとGoogleマップ連携が可能です。
+              </p>
+              <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#3A4A5C", marginBottom: 12 }}>路線名（運行状況確認）</div>
+                {routes.map(r => (
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #F4F6F8" }}>
+                    <span style={{ fontSize: 20 }}>{TYPE_ICON[r.type]}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#1A2332" }}>{r.name}</div>
+                      <div style={{ fontSize: 11, color: "#9AAABB" }}>{r.type}</div>
+                    </div>
+                    <button onClick={() => setRoutes(p => p.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#C8D0DC", padding: 0 }}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => setModal("route")} style={{ width: "100%", marginTop: routes.length > 0 ? 10 : 0, padding: "9px", borderRadius: 10, border: "1.5px dashed #B0C4D8", background: "#F8FAFC", cursor: "pointer", fontSize: 13, color: "#1565C0", fontWeight: 600, fontFamily: "inherit" }}>＋ 路線を追加</button>
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#3A4A5C", marginBottom: 12 }}>出発地 → 目的地（Googleマップ乗換案内）</div>
+                {tripRoutes.map(r => (
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #F4F6F8" }}>
+                    <span style={{ fontSize: 20 }}>{TYPE_ICON[r.type]}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1A2332" }}>{r.from} → {r.to}</div>
+                      <div style={{ fontSize: 11, color: "#9AAABB" }}>{r.type}{r.arrive ? `　到着 ${r.arrive}` : ""}</div>
+                    </div>
+                    <a href={gmapsRouteUrl(r.from, r.to, r.arrive)} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20, background: "#EBF3FF", color: "#1565C0", fontWeight: 600, textDecoration: "none", flexShrink: 0, border: "1px solid #B3D0F0" }}>
+                      {r.arrive ? `${r.arrive}着で検索` : "地図"}
+                    </a>
+                    <button onClick={() => setTripRoutes(p => p.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#C8D0DC", padding: 0 }}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => setModal("trip")} style={{ width: "100%", marginTop: tripRoutes.length > 0 ? 10 : 0, padding: "9px", borderRadius: 10, border: "1.5px dashed #B0C4D8", background: "#F8FAFC", cursor: "pointer", fontSize: 13, color: "#1565C0", fontWeight: 600, fontFamily: "inherit" }}>＋ ルートを追加</button>
+              </div>
+
+              <div style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "1.5px solid #E8D5F5" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 18, display: "inline-flex", alignItems: "center" }}>
+                    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <ellipse cx="20" cy="16" rx="7" ry="13" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                      <ellipse cx="20" cy="16" rx="3.5" ry="9" fill="#F8BBD0"/>
+                      <ellipse cx="44" cy="16" rx="7" ry="13" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                      <ellipse cx="44" cy="16" rx="3.5" ry="9" fill="#F8BBD0"/>
+                      <ellipse cx="32" cy="36" rx="20" ry="18" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                      <circle cx="24" cy="33" r="3" fill="#F48FB1"/>
+                      <circle cx="40" cy="33" r="3" fill="#F48FB1"/>
+                      <ellipse cx="32" cy="40" rx="2.5" ry="1.5" fill="#F48FB1"/>
+                      <line x1="14" y1="39" x2="28" y2="41" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                      <line x1="14" y1="42" x2="28" y2="42" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                      <line x1="50" y1="39" x2="36" y2="41" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                      <line x1="50" y1="42" x2="36" y2="42" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#6A1B9A" }}>千葉工大生専用ルート</div>
+                </div>
+                <div style={{ fontSize: 11, color: "#9AAABB", marginBottom: 12 }}>到着駅は新習志野・津田沼・新津田沼から選択</div>
+                {citRoutes.map(r => (
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #F4F6F8" }}>
+                    <span style={{ fontSize: 20 }}>{TYPE_ICON[r.type]}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1A2332" }}>{r.from} → {r.to}</div>
+                      <div style={{ fontSize: 11, color: "#9AAABB" }}>{r.type}{r.arrive ? `　到着 ${r.arrive}` : ""}</div>
+                    </div>
+                    <a href={gmapsRouteUrl(r.from, r.to, r.arrive)} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20, background: "#F3E5F5", color: "#6A1B9A", fontWeight: 600, textDecoration: "none", flexShrink: 0, border: "1px solid #CE93D8" }}>
+                      {r.arrive ? `${r.arrive}着で検索` : "地図"}
+                    </a>
+                    <button onClick={() => setCitRoutes(p => p.filter(x => x.id !== r.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#C8D0DC", padding: 0 }}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => setModal("cit")} style={{ width: "100%", marginTop: citRoutes.length > 0 ? 10 : 0, padding: "9px", borderRadius: 10, border: "1.5px dashed #CE93D8", background: "#FAF4FF", cursor: "pointer", fontSize: 13, color: "#6A1B9A", fontWeight: 600, fontFamily: "inherit" }}>＋ 自宅からのルートを追加</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Modals ── */}
+          {modal && (
+            <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(10,20,40,0.45)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+              <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "20px 20px 0 0", padding: "20px 20px 40px", width: "100%", boxSizing: "border-box", maxHeight: "90vh", overflowY: "auto" }}>
+
+                {/* Cell */}
+                {modal === "cell" && editCell && (<>
+                  <h3 style={{ margin: "0 0 4px", fontSize: 16, color: "#1A2332" }}>{DAYS[editCell.day]}曜</h3>
+
+                  {/* 授業時間（開始〜終了限） */}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 6 }}>授業時間</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <select value={editCell.period} onChange={e => {
+                        const newStart = Number(e.target.value);
+                        const newEnd = Math.max(newStart, cellForm.periodEnd || newStart);
+                        setEditCell(ec => ({ ...ec, period: newStart, key: ck(ec.day, newStart) }));
+                        setCellForm(f => ({ ...f, periodEnd: newEnd }));
+                      }} style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: "1.5px solid #D0DCE8", fontSize: 14, fontFamily: "inherit", background: "#fff", cursor: "pointer" }}>
+                        {PERIODS.map(({ p }) => <option key={p} value={p}>{p}限 ({PERIODS[p-1].s}〜)</option>)}
+                      </select>
+                      <span style={{ fontSize: 14, color: "#7A8A9A", flexShrink: 0 }}>〜</span>
+                      <select value={cellForm.periodEnd || editCell.period} onChange={e => {
+                        const newEnd = Number(e.target.value);
+                        setCellForm(f => ({ ...f, periodEnd: Math.max(editCell.period, newEnd) }));
+                      }} style={{ flex: 1, padding: "9px 10px", borderRadius: 10, border: "1.5px solid #D0DCE8", fontSize: 14, fontFamily: "inherit", background: "#fff", cursor: "pointer" }}>
+                        {PERIODS.filter(({ p }) => p >= editCell.period).map(({ p }) => <option key={p} value={p}>{p}限 (〜{PERIODS[p-1].e})</option>)}
+                      </select>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#9AAABB", marginTop: 4 }}>
+                      {PERIODS[editCell.period - 1].s} 〜 {PERIODS[(cellForm.periodEnd || editCell.period) - 1].e}
+                    </div>
+                  </div>
+
+                  {/* 欠席管理（授業登録済みのとき表示） */}
+                  {semCls[editCell.key] && (() => {
+                    const absent = getAbsent(editCell.key);
+                    const absentColor = absent > 0 ? ABSENT_COLORS[Math.min(absent, 4)] : null;
+                    return (
+                      <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 12, background: absent === 0 ? "#F0F4F8" : absentColor.bg, border: absent > 0 ? `1.5px solid ${absentColor.bg}` : "1.5px solid #E0E8F0" }}>
+                        <div style={{ display: "flex", alignItems: "center", justify-content: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: absent > 0 ? absentColor.text : "#7A8A9A", marginBottom: 2 }}>欠席回数</div>
+                            <div style={{ fontSize: 22, fontWeight: 700, color: absent > 0 ? absentColor.text : "#3A4A5C" }}>{absent}<span style={{ fontSize: 13, fontWeight: 400 }}>回</span></div>
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={() => setAbsences(prev => { const ak = absKey(editCell.key); return { ...prev, [ak]: (prev[ak] || 0) + 1 }; })}
+                              style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "#C62828", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                              ＋ 欠席
+                            </button>
+                            {absent > 0 && (
+                              <button onClick={() => resetAbsent(editCell.key)}
+                                style={{ padding: "7px 10px", borderRadius: 10, border: "1.5px solid #C8D0DC", background: "#fff", color: "#7A8A9A", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+                                リセット
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {absent > 0 && absent <= 4 && (
+                          <div style={{ marginTop: 6, fontSize: 11, color: absentColor.text, fontWeight: 600 }}>
+                            {absent === 1 && "😊 まだ大丈夫"}
+                            {absent === 2 && "😟 あれ？大丈夫？"}
+                            {absent === 3 && "😱 やばいぞ！次で落単！"}
+                            {absent >= 4 && "💀 落単"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>授業名</div>
+                    <input value={cellForm.name} onChange={e => setCellForm(f => ({ ...f, name: e.target.value }))} placeholder="例：イノベーションマネジメント" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>教室</div>
+                    <input value={cellForm.room} onChange={e => setCellForm(f => ({ ...f, room: e.target.value }))} placeholder="例：631" style={inputStyle} />
+                  </div>
+                  <button onClick={saveCell} style={primaryBtn}>保存</button>
+                  {semCls[editCell.key] && (
+                    <button onClick={() => {
+                      const { day, period: periodStart } = editCell;
+                      setClasses(prev => {
+                        const n = { ...prev, [semKey]: { ...(prev[semKey] || {}) } };
+                        const oldCls = n[semKey][editCell.key];
+                        const oldEnd = oldCls?.spanTo || periodStart;
+                        for (let p = periodStart; p <= oldEnd; p++) delete n[semKey][ck(day, p)];
+                        return n;
+                      });
+                      setModal(null);
+                    }}
+                      style={{ ...primaryBtn, background: "#fff", color: "#C62828", border: "1.5px solid #EF9A9A", marginTop: 8 }}>削除</button>
+                  )}
+                </>)}
+
+                {/* Deadline */}
+                {modal === "deadline" && (<>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#1A2332" }}>締め切りを追加</h3>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>タイトル</div>
+                    <input value={dlForm.title} onChange={e => setDlForm(f => ({ ...f, title: e.target.value }))} placeholder="例：統計レポート第2回" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>種類</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {DL_TYPES.map(t => <button key={t} onClick={() => setDlForm(f => ({ ...f, type: t }))} style={typeChip(dlForm.type === t)}>{t}</button>)}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>締め切り日</div>
+                    <input type="date" value={dlForm.date} onChange={e => setDlForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} />
+                  </div>
+                  <button onClick={addDeadline} style={primaryBtn}>追加</button>
+                </>)}
+
+                {/* Route */}
+                {modal === "route" && (<>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#1A2332" }}>路線を追加</h3>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>路線名</div>
+                    <input value={routeForm.name} onChange={e => setRouteForm(f => ({ ...f, name: e.target.value }))} placeholder="例：東京メトロ有楽町線" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>種類</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {TRANSPORT_TYPES.map(t => <button key={t} onClick={() => setRouteForm(f => ({ ...f, type: t }))} style={{ ...typeChip(routeForm.type === t), flex: 1 }}>{TYPE_ICON[t]} {t}</button>)}
+                    </div>
+                  </div>
+                  <button onClick={addRoute} style={primaryBtn}>追加</button>
+                </>)}
+
+                {/* Trip */}
+                {modal === "trip" && (<>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#1A2332" }}>ルートを追加</h3>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>出発地</div>
+                    <input value={tripForm.from} onChange={e => setTripForm(f => ({ ...f, from: e.target.value }))} placeholder="例：千葉駅" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>目的地</div>
+                    <input value={tripForm.to} onChange={e => setTripForm(f => ({ ...f, to: e.target.value }))} placeholder="例：早稲田大学" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>到着時間（任意）</div>
+                    <input type="time" value={tripForm.arrive} onChange={e => setTripForm(f => ({ ...f, arrive: e.target.value }))} style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>種類</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {TRANSPORT_TYPES.map(t => <button key={t} onClick={() => setTripForm(f => ({ ...f, type: t }))} style={{ ...typeChip(tripForm.type === t), flex: 1 }}>{TYPE_ICON[t]} {t}</button>)}
+                    </div>
+                  </div>
+                  <button onClick={addTrip} style={primaryBtn}>追加</button>
+                </>)}
+
+                {/* CIT */}
+                {modal === "cit" && (<>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center" }}>
+                      <svg width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="20" cy="16" rx="7" ry="13" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                        <ellipse cx="20" cy="16" rx="3.5" ry="9" fill="#F8BBD0"/>
+                        <ellipse cx="44" cy="16" rx="7" ry="13" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                        <ellipse cx="44" cy="16" rx="3.5" ry="9" fill="#F8BBD0"/>
+                        <ellipse cx="32" cy="36" rx="20" ry="18" fill="white" stroke="#BDBDBD" strokeWidth="2"/>
+                        <circle cx="24" cy="33" r="3" fill="#F48FB1"/>
+                        <circle cx="40" cy="33" r="3" fill="#F48FB1"/>
+                        <ellipse cx="32" cy="40" rx="2.5" ry="1.5" fill="#F48FB1"/>
+                        <line x1="14" y1="39" x2="28" y2="41" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                        <line x1="14" y1="42" x2="28" y2="42" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                        <line x1="50" y1="39" x2="36" y2="41" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                        <line x1="50" y1="42" x2="36" y2="42" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                    <h3 style={{ margin: 0, fontSize: 16, color: "#6A1B9A" }}>千葉工大生専用ルート</h3>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>出発地（自宅の最寄り駅など）</div>
+                    <input value={citForm.from} onChange={e => setCitForm(f => ({ ...f, from: e.target.value }))} placeholder="例：千葉駅" style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>到着駅</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {CIT_STATIONS.map(s => (
+                        <button key={s} onClick={() => setCitForm(f => ({ ...f, to: s }))}
+                          style={{ flex: 1, padding: "8px 4px", borderRadius: 10, border: "1.5px solid", borderColor: citForm.to === s ? "#6A1B9A" : "#D0DCE8", background: citForm.to === s ? "#F3E5F5" : "#fff", color: citForm.to === s ? "#6A1B9A" : "#7A8A9A", fontSize: 11, fontWeight: citForm.to === s ? 700 : 400, cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4 }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>到着時間（任意）</div>
+                    <input type="time" value={citForm.arrive} onChange={e => setCitForm(f => ({ ...f, arrive: e.target.value }))} style={inputStyle} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: "#7A8A9A", marginBottom: 4 }}>種類</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {TRANSPORT_TYPES.map(t => <button key={t} onClick={() => setCitForm(f => ({ ...f, type: t }))} style={{ ...typeChip(citForm.type === t), flex: 1 }}>{TYPE_ICON[t]} {t}</button>)}
+                    </div>
+                  </div>
+                  <button onClick={addCit} style={{ ...primaryBtn, background: "#6A1B9A" }}>追加</button>
+                </>)}
+              </div>
+            </div>
+          )}
+        </div>
+      );
     }
-    
-    html += `</div>`;
-  });
 
-  html += `</div></div>`;
-  el.innerHTML = html;
-}
-
-function addTimetable() {
-  const day = document.getElementById('ttDay').value;
-  const title = document.getElementById('ttTitle').value.trim();
-  const room = document.getElementById('ttRoom').value.trim() || '教室未設定';
-  const period = document.getElementById('ttPeriod').value;
-  
-  // 選択された時限に紐づく開始時刻を自動設定
-  const time = periodTimes[period];
-
-  if (!title) {
-    alert('科目名を入力してください');
-    return;
-  }
-
-  timetable.push({
-    id: Date.now().toString(),
-    day,
-    title,
-    room,
-    period,
-    time
-  });
-
-  document.getElementById('ttTitle').value = '';
-  document.getElementById('ttRoom').value = '';
-
-  saveTimetable();
-  renderTimetable();
-}
-
-function deleteTimetable(id) {
-  timetable = timetable.filter(t => t.id !== id);
-  saveTimetable();
-  renderTimetable();
-}
-
-/* ── Attendance Monitor ("出席登録忘れないくん") ── */
-function startAttendanceMonitor() {
-  // 60秒(1分)ごとに時刻チェックを実行
-  setInterval(checkAttendanceReminders, 60000);
-  
-  // 読み込み時にも一度即時チェック
-  checkAttendanceReminders();
-}
-
-function checkAttendanceReminders() {
-  const now = new Date();
-  const currentDay = now.getDay().toString(); // "0"(日) 〜 "6"(土)
-  const currentH = now.getHours();
-  const currentM = now.getMinutes();
-  const currentTimeStr = `${String(currentH).padStart(2, '0')}:${String(currentM).padStart(2, '0')}`;
-  
-  // 今日の日付文字列 (重複アラート制御用)
-  const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-
-  timetable.forEach(item => {
-    // 曜日が一致するかチェック
-    if (item.day !== currentDay) return;
-
-    // 授業の開始時間から15分後の時刻を算出
-    const [h, m] = item.time.split(':').map(Number);
-    let targetM = m + 15;
-    let targetH = h;
-    
-    if (targetM >= 60) {
-      targetM -= 60;
-      targetH = (targetH + 1) % 24;
-    }
-    
-    const targetTimeStr = `${String(targetH).padStart(2, '0')}:${String(targetM).padStart(2, '0')}`;
-
-    // 時間がちょうど一致した場合
-    if (currentTimeStr === targetTimeStr) {
-      const alertKey = `${item.id}_${todayStr}`;
-      
-      // 本日この授業でまだ通知していない場合のみ発火
-      if (!alertedToday[alertKey]) {
-        alertedToday[alertKey] = true;
-        alert(`【${item.title}】出席登録終わった？`);
-      }
-    }
-  });
-}
-
-/* ── Deadline Notifications ── */
-function requestDeadlineNotificationPermission() {
-  if (!('Notification' in window)) return; // 非対応ブラウザはスキップ
-
-  if (Notification.permission === 'granted') {
-    // すでに許可済み → 即時チェック＋1時間ごとに監視
-    checkDeadlineNotifications();
-    setInterval(checkDeadlineNotifications, 60 * 60 * 1000);
-  } else if (Notification.permission !== 'denied') {
-    // まだ未回答 → 許可ダイアログを表示
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        checkDeadlineNotifications();
-        setInterval(checkDeadlineNotifications, 60 * 60 * 1000);
-      }
-    });
-  }
-}
-
-function checkDeadlineNotifications() {
-  if (Notification.permission !== 'granted') return;
-
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  // 古い日付の通知記録をクリーンアップ
-  Object.keys(notifiedDeadlines).forEach(key => {
-    const keyDate = key.split('_').pop();
-    if (keyDate < todayStr) delete notifiedDeadlines[key];
-  });
-
-  deadlines.forEach(dl => {
-    const days = getDays(dl.date);
-    if (days < 0 || days > 3) return; // 3日より先・期限切れはスキップ
-
-    const notifKey = `${dl.title}_${todayStr}`;
-    if (notifiedDeadlines[notifKey]) return; // 本日すでに通知済み
-
-    // 通知を表示
-    const daysText = days === 0 ? '今日が締め切り！' : `あと${days}日で締め切り！`;
-    const body = `【${dl.subject}】${dl.title}\n${daysText}（${dl.date}）`;
-
-    try {
-      const notif = new Notification('📅 締め切りリマインダー', {
-        body,
-        icon: 'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css',
-        tag: notifKey,
-        requireInteraction: days === 0 // 当日は自動で消えないようにする
-      });
-
-      // 通知クリックでタブをフォーカス
-      notif.onclick = () => { window.focus(); notif.close(); };
-
-      notifiedDeadlines[notifKey] = true;
-      localStorage.setItem('td_notified_deadlines', JSON.stringify(notifiedDeadlines));
-    } catch (e) {
-      console.warn('通知の表示に失敗しました:', e);
-    }
-  });
-}
-
-/* ── Summary ── */
-function updateSummary() {
-  document.getElementById('sumLines').textContent = lines.length;
-  document.getElementById('sumDelays').textContent = lines.filter(l=>l.status==='delay'||l.status==='stop').length;
-  document.getElementById('sumUrgent').textContent = deadlines.filter(d=>{const v=getDays(d.date);return v>=0&&v<=3;}).length;
-  const now=new Date(), me=new Date(now.getFullYear(),now.getMonth()+1,0);
-  document.getElementById('sumTotal').textContent = deadlines.filter(d=>{const dd=new Date(d.date);return dd>=now&&dd<=me;}).length;
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-</script>
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
 </body>
 </html>
