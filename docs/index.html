@@ -763,7 +763,7 @@
                     const absentColor = absent > 0 ? ABSENT_COLORS[Math.min(absent, 4)] : null;
                     return (
                       <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 12, background: absent === 0 ? "#F0F4F8" : absentColor.bg, border: absent > 0 ? `1.5px solid ${absentColor.bg}` : "1.5px solid #E0E8F0" }}>
-                        <div style={{ display: "flex", alignItems: "center", justify-content: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div>
                             <div style={{ fontSize: 11, color: absent > 0 ? absentColor.text : "#7A8A9A", marginBottom: 2 }}>欠席回数</div>
                             <div style={{ fontSize: 22, fontWeight: 700, color: absent > 0 ? absentColor.text : "#3A4A5C" }}>{absent}<span style={{ fontSize: 13, fontWeight: 400 }}>回</span></div>
